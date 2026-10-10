@@ -64,5 +64,15 @@ Implementar a arquitetura completa do backend da plataforma **Workly**, fornecen
   - `docker-compose.yml` orquestrando os serviços `workly_app` e banco de dados relacional `workly_postgres` com auto-execução do `schema.sql`.
   - Script `deploy_vps.sh` criado para automação de build, instalação de dependências de contêineres e deploy em 1 comando.
 
+- [x] **Etapa 17:** Deploy em Produção Executado na VPS com Sucesso:
+  - Servidor: `37.148.132.216` (Ubuntu 24.04).
+  - Gerenciador de Processos: PM2 daemonizado com boot automático via systemd (`workly` online).
+  - Proxy Reverso: Nginx configurado com suporte a WebSockets e fallback SPA.
+  - Certificado SSL: Let's Encrypt HTTPS ativo com renovação automática.
+  - URLs de Produção Operacionais:
+    - `https://workly.37.148.132.216.nip.io/login`
+    - `https://workly.37.148.132.216.nip.io/home`
+    - `https://workly.37.148.132.216.nip.io/health`
+
 ## Status Final
-**INFRAESTRUTURA DE PRODUÇÃO E PACOTE DE DEPLOY NA VPS PRONTOS NO GITHUB**
+**CONCLUÍDO, PUBLICADO NO GITHUB E OPERACIONAL EM PRODUÇÃO NA VPS (COM HTTPS ATIVO)**

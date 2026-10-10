@@ -20,6 +20,11 @@ Implementar a arquitetura completa do backend da plataforma **Workly**, fornecen
 - [x] **Etapa 7:** Servidor unificado Express com suporte estático a assets e fallback SPA TanStack Router.
 - [x] **Etapa 8:** Injeção da Apresentação Executiva interativa com status em tempo real da API na página de Login (`/login`).
 - [x] **Etapa 9:** Servidor operacional em background na porta 4000 e aberto no navegador padrão em `http://localhost:4000/login`.
+- [x] **Etapa 10:** Versão para computador e responsividade aprimorada:
+  - Topbar de controle com alternador instantâneo (🖥️ Computador Expandido vs 📱 Simulador Celular).
+  - Sidebar desktop de alta produtividade com navegação completa, atalhos de rotas e status do usuário.
+  - Layout widescreen expandido (1100px) com grids de 4 a 8 colunas para categorias, cards e vagas.
+  - Tela de login otimizada para computadores com card glassmorphic centralizado.
 
 ## Status Final
-**CONCLUÍDO COM SUCESSO (VALIDADO E OPERACIONAL)**
+**CONCLUÍDO COM SUCESSO (FULLSTACK + DESKTOP RESPONSIVE ATIVO)**

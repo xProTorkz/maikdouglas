@@ -59,5 +59,10 @@ Implementar a arquitetura completa do backend da plataforma **Workly**, fornecen
   - Script oficial de Seed (`seed.ts` e comando `npm run seed`) criado com categorias, vagas e profissionais da praça piloto em Goiás (Goiatuba, Rio Verde e Goiânia).
   - Compilação TypeScript com 0 erros e validação completa de ponta a ponta.
 
+- [x] **Etapa 16:** Infraestrutura de Deploy na VPS Pronta:
+  - `Dockerfile` multi-stage criado com runtime leve em Node.js 20 Alpine.
+  - `docker-compose.yml` orquestrando os serviços `workly_app` e banco de dados relacional `workly_postgres` com auto-execução do `schema.sql`.
+  - Script `deploy_vps.sh` criado para automação de build, instalação de dependências de contêineres e deploy em 1 comando.
+
 ## Status Final
-**SISTEMA 100% OPERACIONAL, PRONTO PARA EXECUÇÃO LOCAL E EM PRODUÇÃO**
+**INFRAESTRUTURA DE PRODUÇÃO E PACOTE DE DEPLOY NA VPS PRONTOS NO GITHUB**

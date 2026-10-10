@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Servidor de Aplicação Workly (API Node.js + WebSockets + Frontend SPA)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: workly_app
+    restart: always
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - DATABASE_URL=postgresql://workly_user:workly_pass_2026@postgres:5432/workly_prod?sslmode=disable
+      - JWT_SECRET=workly-super-secure-production-jwt-token-2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - workly_network
+
+  # Banco de Dados Relacional PostgreSQL 16
+  postgres:
+    image: postgres:16-alpine
+    container_name: workly_postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=workly_user
+      - POSTGRES_PASSWORD=workly_pass_2026
+      - POSTGRES_DB=workly_prod
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workly_user -d workly_prod"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - workly_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  workly_network:
+    driver: bridge

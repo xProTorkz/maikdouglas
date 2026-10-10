@@ -107,3 +107,39 @@ $$\text{Workly Score} = (P \times 0.35) + (Q \times 0.35) + (V \times 0.20) + (C
 
 ---
 *Documento aprovado para orientar o desenvolvimento técnico do backend e a expansão do produto.*
+
+---
+
+## 6. PLANO DE NEGÓCIOS FASE 2: FINTECH IN-APP, LIQUIDEZ E EXPANSÃO AVANÇADA
+
+### 6.1. O Loop Virtuoso: Pagamentos + Pontuação no App
+O grande diferencial do Workly em relação a qualquer outro marketplace é o acoplamento entre **Garantia de Pagamento (Custódia Pix)** e **Patrimônio de Reputação (Workly Score)**:
+
+```
+[ CONTRATANTE ] ──(1. Pix em Custódia)──> [ WORKLY ESCROW ]
+                                                  │
+                                            (2. Execução)
+                                                  ▼
+[ PRESTADOR ] <──(4. Liberação Líquida)─── [ CÓDIGO 6 DÍGITOS ]
+      │                                           │
+      └──(5. +Pontos Workly Score)──────────────(3. Validação)
+```
+
+1. **Incentivo Econômico Real:** A comissão do prestador cai de 15% (Bronze) para 8% (Diamante). Em um trabalho de R$ 500, o profissional economiza R$ 35,00 por transação.
+2. **Incentivo de Demanda:** O algoritmo do Workly Express despacha pedidos emergenciais exclusivamente para prestadores nos níveis Ouro e Diamante.
+3. **Segurança para o Cliente:** O contratante só passa o código de 6 dígitos no local após inspecionar o trabalho. Se houver divergência, aciona o suporte e tem cobertura do Fundo de Proteção (1,5%).
+
+### 6.2. Projeção de Escala & Unit Economics (Mês 12 — Praça Piloto Consolidada)
+* **Transações Mensais:** 10.000 serviços
+* **GMV (Gross Merchandise Value):** R$ 2.500.000,00 (Ticket médio R$ 250,00)
+* **Take-Rate Médio Ponderado (11,5%):** R$ 287.500,00
+* **Receita de Assinaturas (500 membros Verified a R$ 29,90):** R$ 14.950,00
+* **Receita B2B Empresas (30 contratos médios a R$ 399,00):** R$ 11.970,00
+* **Receita Bruta Total:** **R$ 314.420,00 / mês**
+* **Custos Diretos (Gateway Pix R$ 0,80 + Fundo Garantia 1,5%):** - R$ 45.500,00
+* **Margem de Contribuição:** **R$ 268.920,00 (85,5%)**
+
+### 6.3. Playbook de Expansão Geográfica (3 Fases)
+1. **Fase 1 (Mês 1 a 6):** Praça Piloto (Goiânia e Região Metropolitana / Interior SP). Validação das 2 verticais (Gastronomia/Eventos e Manutenção Residencial).
+2. **Fase 2 (Mês 7 a 12):** Expansão Regional (Distrito Federal, Triângulo Mineiro e Campinas/SP). Introdução de serviços corporativos B2B.
+3. **Fase 3 (Mês 13+):** Capitais do Sudeste e Sul com modelo franquia de praça ou operação centralizada com hubs de atendimento ao trabalhador.

@@ -424,7 +424,15 @@
             <div style="font-size: 22px; font-weight: 800; color: #60a5fa; margin-top: 4px;">R$ ${data.saldoEmCustodia.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
           </div>
         </div>
-        <button onclick="window.worklyWithdrawPrompt()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 16px; cursor: pointer; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+          <button onclick="window.worklyShowPixEscrowModal()" style="padding: 12px; background: rgba(16,185,129,0.18); border: 1px solid #10b981; color: #34d399; font-weight: 700; border-radius: 14px; cursor: pointer; font-size: 12px;">
+            ⚡ Pagar com Custódia Pix
+          </button>
+          <button onclick="window.worklyValidateCodeModal()" style="padding: 12px; background: rgba(15,111,255,0.18); border: 1px solid #3b82f6; color: #60a5fa; font-weight: 700; border-radius: 14px; cursor: pointer; font-size: 12px;">
+            🔑 Liberar com Código
+          </button>
+        </div>
+        <button onclick="window.worklyWithdrawPrompt()" style="width: 100%; padding: 13px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 14px; cursor: pointer; margin-bottom: 20px;">
           ⚡ Solicitar Saque Pix Instantâneo
         </button>
         <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 10px;">Últimas Transações</h3>
@@ -470,6 +478,24 @@
         </div>
         <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 14px; padding: 14px; font-size: 12px; color: #fcd34d;">
           🦁 <strong>Dica do Wex:</strong> ${data.dicaDoWex}
+        </div>
+        <div style="margin-top: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 14px;">
+          <div style="font-size: 12px; font-weight: 800; color: #fff; margin-bottom: 6px;">🎮 Simulador de Impacto no Score & Taxa</div>
+          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 10px;">Veja como cada entrega pontual e avaliação afeta seu Score e reduz a taxa de intermediação:</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button onclick="window.worklySimulateScoreChange(15, 'Serviço Concluído no Prazo')" style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              +15 pts no Prazo
+            </button>
+            <button onclick="window.worklySimulateScoreChange(25, 'Avaliação 5 Estrelas')" style="background: rgba(15,111,255,0.12); border: 1px solid rgba(15,111,255,0.3); color: #60a5fa; padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              +25 pts 5 Estrelas
+            </button>
+            <button onclick="window.worklySimulateScoreChange(20, 'Curso Workly Academy')" style="background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3); color: #c084fc; padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              +20 pts Academy
+            </button>
+            <button onclick="window.worklySimulateScoreChange(-60, 'Cancelamento Injustificado')" style="background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              -60 pts Cancelamento
+            </button>
+          </div>
         </div>
       `;
     } else if (type === 'wex_ai') {
@@ -548,6 +574,162 @@
         alert(d.mensagem || 'Saque processado com sucesso!');
         window.worklyOpenSubmenu('extrato');
       });
+  };
+
+  // 4.1. MODAL DE CUSTÓDIA PIX (ESCROW IN-APP)
+  window.worklyShowPixEscrowModal = async function () {
+    const valorPadrao = 350;
+    try {
+      const res = await fetch(`${API_BASE}/wallet/escrow/generate-pix`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ valor: valorPadrao, titulo: 'Serviço com Garantia Workly Escrow' })
+      });
+      const data = await res.json();
+
+      const existing = document.getElementById('workly-escrow-pix-modal');
+      if (existing) existing.remove();
+
+      const modal = document.createElement('div');
+      modal.id = 'workly-escrow-pix-modal';
+      modal.className = 'workly-sub-modal';
+      modal.innerHTML = `
+        <div class="workly-sub-card" style="max-width: 440px; text-align: center;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #fff;">🛡️ Pagamento Seguro com Custódia Pix</h3>
+            <button onclick="document.getElementById('workly-escrow-pix-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+          </div>
+          <div style="font-size: 12px; color: #94a3b8; margin-bottom: 14px;">
+            O valor fica blindado no <strong>Workly Escrow</strong> e só é liberado para o prestador quando você validar o código de conclusão no local.
+          </div>
+          <div style="font-size: 26px; font-weight: 800; color: #34d399; margin-bottom: 12px;">
+            R$ ${Number(data.valor).toFixed(2)}
+          </div>
+          <div style="background: #fff; padding: 12px; border-radius: 16px; display: inline-block; margin-bottom: 14px;">
+            <img src="${data.qrCodeUrl}" alt="QR Code Pix" style="width: 180px; height: 180px; display: block;" />
+          </div>
+          <div style="background: rgba(255,255,255,0.06); padding: 10px; border-radius: 12px; font-family: monospace; font-size: 10px; color: #cbd5e1; word-break: break-all; margin-bottom: 12px; text-align: left;">
+            ${data.pixCopiaECola}
+          </div>
+          <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+            <button onclick="navigator.clipboard.writeText('${data.pixCopiaECola}'); alert('Código Pix Copia e Cola copiado com sucesso!');" style="flex: 1; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">
+              📋 Copiar Código Pix
+            </button>
+            <button onclick="window.worklySimulatePixConfirm('${data.txid}', ${data.valor}, '${data.codigoSeguranca}')" style="flex: 1; padding: 10px; background: linear-gradient(135deg, #10b981, #059669); border: none; color: #fff; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">
+              ⚡ Simular Confirmação Pix
+            </button>
+          </div>
+          <div id="escrow-pix-status-feedback" style="font-size: 11px; color: #f59e0b;">
+            ⏳ Aguardando leitura do QR Code ou pagamento via Pix...
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao gerar cobrança Pix.');
+    }
+  };
+
+  window.worklySimulatePixConfirm = async function (txid, valor, codigo) {
+    try {
+      const res = await fetch(`${API_BASE}/wallet/escrow/simulate-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ txid, valor, codigoSeguranca: codigo })
+      });
+      const data = await res.json();
+      const feedback = document.getElementById('escrow-pix-status-feedback');
+      if (feedback) {
+        feedback.innerHTML = `
+          <div style="background: rgba(16,185,129,0.2); border: 1px solid #10b981; border-radius: 12px; padding: 12px; margin-top: 10px; text-align: left;">
+            <div style="color: #34d399; font-weight: 700; font-size: 13px;">✅ Pagamento Confirmado em Custódia!</div>
+            <div style="color: #fff; font-size: 11px; margin-top: 4px;">Código de Liberação do Cliente:</div>
+            <div style="font-size: 24px; font-weight: 900; letter-spacing: 4px; color: #60a5fa; text-align: center; margin: 8px 0; background: rgba(0,0,0,0.3); padding: 6px; border-radius: 8px;">
+              ${data.codigoSeguranca}
+            </div>
+            <div style="color: #94a3b8; font-size: 10px;">Forneça este código ao prestador apenas após a finalização do serviço.</div>
+          </div>
+        `;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // 4.2. VALIDADOR DE CÓDIGO DE LIBERAÇÃO
+  window.worklyValidateCodeModal = function () {
+    const existing = document.getElementById('workly-validate-code-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'workly-validate-code-modal';
+    modal.className = 'workly-sub-modal';
+    modal.innerHTML = `
+      <div class="workly-sub-card" style="max-width: 400px; text-align: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #fff;">🔑 Liberar Pagamento com Código</h3>
+          <button onclick="document.getElementById('workly-validate-code-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;">
+          Digite o código de 6 dígitos fornecido pelo contratante para liberar o saldo retido em custódia.
+        </p>
+        <input id="workly-escrow-code-input" type="text" maxlength="6" placeholder="Ex: 849201" style="width: 100%; text-align: center; font-size: 24px; letter-spacing: 6px; font-weight: 800; padding: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: #fff; margin-bottom: 16px; outline: none;" />
+        <button onclick="window.worklyExecuteCodeValidation()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer;">
+          Validar e Liberar Pagamento
+        </button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  };
+
+  window.worklyExecuteCodeValidation = async function () {
+    const input = document.getElementById('workly-escrow-code-input');
+    if (!input || input.value.trim().length !== 6) {
+      alert('Por favor, informe o código de 6 dígitos completo.');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/wallet/escrow/validate-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo: input.value.trim(), valorBruto: 350 })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.mensagem);
+        const modal = document.getElementById('workly-validate-code-modal');
+        if (modal) modal.remove();
+
+        // Aumenta pontuação do usuário e atualiza sessão
+        const user = getCurrentUser();
+        user.worklyScore = Math.min(1000, (user.worklyScore || 885) + 25);
+        if (user.worklyScore >= 900) user.scoreTier = 'diamante';
+        setCurrentUser(user);
+        window.worklyOpenSubmenu('score');
+      } else {
+        alert(data.error || 'Código inválido.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao validar código.');
+    }
+  };
+
+  // 4.3. SIMULADOR REATIVO DE SCORE (IN-APP)
+  window.worklySimulateScoreChange = function (delta, motivo) {
+    const user = getCurrentUser();
+    const anterior = user.worklyScore || 885;
+    const novo = Math.max(0, Math.min(1000, anterior + delta));
+    user.worklyScore = novo;
+    if (novo >= 900) user.scoreTier = 'diamante';
+    else if (novo >= 700) user.scoreTier = 'ouro';
+    else if (novo >= 400) user.scoreTier = 'prata';
+    else user.scoreTier = 'bronze';
+
+    setCurrentUser(user);
+    alert(`${delta > 0 ? '🎉 +' : '⚠️ '}${delta} pontos no Workly Score (${motivo})\nNovo Score: ${novo} pts (Nível ${user.scoreTier.toUpperCase()})`);
+    window.worklyOpenSubmenu('score');
   };
 
   // 5. INICIALIZAÇÃO E INTERCEPTADORES NA INTERFACE

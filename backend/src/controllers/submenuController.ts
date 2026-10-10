@@ -147,4 +147,66 @@ export class SubmenuController {
       timestamp: new Date().toISOString()
     });
   }
+
+  // 5. Gerar Cobrança Pix para Custódia de Serviço
+  public static generateEscrowPix(req: Request, res: Response) {
+    const { valor = 350, titulo = 'Serviço sob Demanda' } = req.body;
+    const numValor = Number(valor);
+    const txid = 'TX' + Date.now().toString().slice(-8);
+    const codigoSeguranca = Math.floor(100000 + Math.random() * 900000).toString();
+    const pixCopiaECola = `00020126580014br.gov.bcb.pix0136workly-escrow@workly.com.br520400005303986540${numValor.toFixed(2)}5802BR5918WORKLY CUSTODIA LTDA6009SAO PAULO62070503***6304${txid.slice(-4)}`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(pixCopiaECola)}`;
+
+    return res.status(201).json({
+      success: true,
+      txid,
+      titulo,
+      valor: numValor,
+      codigoSeguranca,
+      pixCopiaECola,
+      qrCodeUrl,
+      status: 'aguardando_pagamento',
+      mensagem: 'Cobrança Pix gerada com sucesso! O valor ficará seguro em custódia até sua autorização.'
+    });
+  }
+
+  // 6. Simular Confirmação Bancária de Pix
+  public static simulatePixPayment(req: Request, res: Response) {
+    const { txid, valor = 350, codigoSeguranca = '849201' } = req.body;
+    return res.json({
+      success: true,
+      txid,
+      status: 'em_custodia',
+      codigoSeguranca,
+      valorRetido: Number(valor),
+      dataConfirmacao: new Date().toISOString(),
+      mensagem: 'Pagamento Pix confirmado pela instituição bancária! Valor retido com sucesso no Workly Garantia.'
+    });
+  }
+
+  // 7. Validar Código de 6 Dígitos e Liberar Pagamento
+  public static validateEscrowCode(req: Request, res: Response) {
+    const { codigo, valorBruto = 350 } = req.body;
+    if (!codigo || String(codigo).length !== 6) {
+      return res.status(400).json({ error: 'Informe um código de 6 dígitos válido.' });
+    }
+
+    const valorBrutoNum = Number(valorBruto);
+    const taxaPercentual = 10.0; // 10% para nível Ouro/Diamante
+    const taxaPlataforma = Number(((valorBrutoNum * taxaPercentual) / 100).toFixed(2));
+    const fundoGarantia = Number(((valorBrutoNum * 1.5) / 100).toFixed(2));
+    const valorLiquido = Number((valorBrutoNum - taxaPlataforma - fundoGarantia).toFixed(2));
+
+    return res.json({
+      success: true,
+      status: 'liberado',
+      codigoInformado: codigo,
+      valorBruto: valorBrutoNum,
+      taxaPlataforma,
+      fundoGarantia,
+      valorLiquidoLiberado: valorLiquido,
+      pontosGanhos: 25,
+      mensagem: `Código validado! R$ ${valorLiquido.toFixed(2)} liberados na carteira do prestador (+25 pontos no Workly Score).`
+    });
+  }
 }

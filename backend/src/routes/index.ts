@@ -35,10 +35,13 @@ router.get('/conversations/:id/messages', ChatController.getMessages);
 router.post('/conversations/:id/messages', ChatController.sendMessage);
 router.post('/conversations/:id/release-escrow', ChatController.releaseEscrow);
 
-// 6. ROTAS DE SUBMENUS & SUPORTE WEX AI
+// 6. ROTAS DE SUBMENUS, PAGAMENTOS IN-APP & SUPORTE WEX AI
 router.get('/proposals', SubmenuController.listProposals);
 router.get('/wallet/statement', SubmenuController.getWalletStatement);
 router.post('/wallet/withdraw', SubmenuController.requestWithdraw);
+router.post('/wallet/escrow/generate-pix', SubmenuController.generateEscrowPix);
+router.post('/wallet/escrow/simulate-payment', SubmenuController.simulatePixPayment);
+router.post('/wallet/escrow/validate-code', SubmenuController.validateEscrowCode);
 router.post('/support/chat', SubmenuController.chatWithWex);
 
 export default router;

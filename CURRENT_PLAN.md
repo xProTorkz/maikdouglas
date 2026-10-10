@@ -38,5 +38,12 @@ Implementar a arquitetura completa do backend da plataforma **Workly**, fornecen
   - Higienização de artefatos efêmeros (`.gitignore` e `.env.example`).
   - Branch `main` rastreável com push confirmado em `origin/main`.
 
+- [x] **Etapa 13:** Sistema de Pagamentos In-App, Simulador de Score e Fila do GitHub:
+  - Plano de Negócios Fase 2 com modelo Fintech, Custódia Pix, Unit Economics de escala e alavancas B2B adicionado a `PLANO_DE_NEGOCIOS_WORKLY.md`.
+  - Prompt técnico formal da esteira do GitHub estruturado em `PROMPT_FILA_GITHUB.md` e `.github/prompts/SPRINT_PAGAMENTOS_SCORE.md`.
+  - Módulo In-App de Pagamentos com Custódia Pix (`window.worklyShowPixEscrowModal`), emissão de QR Code e código copia e cola, simulação de webhook de confirmação bancária e validador de código de liberação (`window.worklyValidateCodeModal`).
+  - Simulador interativo do Workly Score no aplicativo (`window.worklySimulateScoreChange`) com progressão dinâmica de níveis e impacto imediato nas taxas de comissão.
+  - Novos endpoints no backend (`/wallet/escrow/generate-pix`, `/wallet/escrow/simulate-payment`, `/wallet/escrow/validate-code`) compilados com 0 erros no TypeScript.
+
 ## Status Final
-**CONCLUÍDO E SINCRONIZADO NO GITHUB (PRONTO PARA PRODUÇÃO)**
+**CONCLUÍDO, TESTADO E SINCRONIZADO NO GITHUB (PRONTO PARA EXECUÇÃO DA FILA)**

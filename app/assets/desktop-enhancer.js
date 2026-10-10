@@ -97,7 +97,9 @@
 
       { to: '#propostas', action: "window.worklyOpenSubmenu('propostas')", icon: '📋', label: 'Minhas Propostas', group: 'Finanças & Garantia' },
       { to: '#extrato', action: "window.worklyOpenSubmenu('extrato')", icon: '💳', label: 'Extrato & Saque Pix', group: 'Finanças & Garantia' },
-      { to: '#score', action: "window.worklyOpenSubmenu('score')", icon: '⭐', label: 'Pilares do Score', group: 'Finanças & Garantia' },
+      { to: '#pagar-pix', action: "window.worklyShowPixEscrowModal()", icon: '⚡', label: 'Pagar com Custódia Pix', badge: 'Escrow', group: 'Finanças & Garantia' },
+      { to: '#validar-codigo', action: "window.worklyValidateCodeModal()", icon: '🔑', label: 'Liberar com Código', group: 'Finanças & Garantia' },
+      { to: '#score', action: "window.worklyOpenSubmenu('score')", icon: '⭐', label: 'Pilares & Simulador Score', group: 'Finanças & Garantia' },
       { to: '/verified', icon: '🛡️', label: 'Workly Verified', badge: 'Selo Pro', group: 'Finanças & Garantia' },
 
       { to: '#wex-ai', action: "window.worklyOpenSubmenu('wex_ai')", icon: '🦁', label: 'Suporte Wex AI', badge: '24/7', group: 'Assistência & Ajustes' },

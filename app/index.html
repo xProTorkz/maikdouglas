@@ -253,4 +253,251 @@
 		}
 	})();
 </script>
+
+<!-- WORKLY APRESENTAÇÃO EXECUTIVA & PAINEL DE CONTROLE FULLSTACK -->
+<style>
+  #workly-pres-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(4, 10, 24, 0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 16px;
+    opacity: 1;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+  #workly-pres-modal.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .workly-pres-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(8, 20, 46, 0.95));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 35px rgba(15, 111, 255, 0.25);
+    border-radius: 24px;
+    max-width: 620px;
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    color: #f8fafc;
+    font-family: 'Sora', 'Manrope', system-ui, sans-serif;
+    padding: 28px 24px;
+  }
+  .workly-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(15, 111, 255, 0.15);
+    border: 1px solid rgba(15, 111, 255, 0.4);
+    color: #60a5fa;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .workly-feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 18px 0;
+  }
+  @media (max-width: 520px) {
+    .workly-feature-grid { grid-template-columns: 1fr; }
+  }
+  .workly-feat-box {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 14px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+  .workly-feat-box:hover {
+    transform: translateY(-2px);
+    border-color: rgba(96, 165, 250, 0.4);
+  }
+  .workly-btn-primary {
+    background: linear-gradient(135deg, #0F6FFF 0%, #8A3FFC 100%);
+    color: #ffffff;
+    font-weight: 700;
+    padding: 14px 24px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    box-shadow: 0 10px 25px -5px rgba(15, 111, 255, 0.4);
+    transition: transform 0.1s ease, filter 0.2s ease;
+    cursor: pointer;
+    border: none;
+    font-size: 15px;
+  }
+  .workly-btn-primary:active { transform: scale(0.98); }
+  .workly-btn-secondary {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s ease;
+  }
+  .workly-btn-secondary:hover { background: rgba(255, 255, 255, 0.12); }
+  #workly-toggle-btn {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 999998;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(96, 165, 250, 0.4);
+    backdrop-filter: blur(8px);
+    color: #93c5fd;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 9999px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+  #workly-toggle-btn:hover {
+    transform: scale(1.04);
+    background: rgba(30, 41, 59, 0.95);
+  }
+</style>
+
+<button id="workly-toggle-btn" onclick="toggleWorklyPres(true)" title="Abrir Apresentação">
+  <span style="font-size: 14px;">✨</span> Apresentação do Projeto
+</button>
+
+<div id="workly-pres-modal" role="dialog" aria-modal="true">
+  <div class="workly-pres-card">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+      <div class="workly-pill">🚀 Workly Fullstack · Apresentação Executiva</div>
+      <button onclick="toggleWorklyPres(false)" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; padding: 4px 8px;">✕</button>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+      <img src="/__l5e/assets-v1/8ecfe286-e5fa-4906-99b5-be4b72dfe1e7/wex.png" alt="Wex Mascot" style="width: 58px; height: 58px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(15,111,255,0.4));">
+      <div>
+        <h2 style="font-size: 22px; font-weight: 800; margin: 0; background: linear-gradient(135deg, #fff 0%, #93c5fd 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Workly — Trabalho que Conecta</h2>
+        <p style="font-size: 12px; color: #94a3b8; margin: 2px 0 0 0;">SuperApp de Serviços, Gig Economy e Empregos com Back-end Integrado</p>
+      </div>
+    </div>
+
+    <p style="font-size: 13px; line-height: 1.5; color: #cbd5e1; margin-bottom: 14px;">
+      Bem-vindo ao ambiente completo do <strong>Workly</strong>. O front-end com 17 módulos e microinterações foi auditado e extraído, acompanhado da nova arquitetura de back-end em <strong>Node.js, TypeScript e PostgreSQL</strong> estruturada para resolver os gargalos de monetização e desintermediação.
+    </p>
+
+    <div class="workly-feature-grid">
+      <div class="workly-feat-box">
+        <div style="font-size: 18px; margin-bottom: 4px;">🛡️</div>
+        <div style="font-weight: 700; font-size: 13px; color: #f1f5f9;">Workly Garantia (Escrow Pix)</div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px; line-height: 1.4;">
+          O contratante paga via Pix e o valor fica retido. O profissional só recebe via QR Code validado presencialmente no término. Fim do calote e da desintermediação.
+        </div>
+      </div>
+
+      <div class="workly-feat-box">
+        <div style="font-size: 18px; margin-bottom: 4px;">⚡</div>
+        <div style="font-weight: 700; font-size: 13px; color: #f1f5f9;">Workly Express (15-45 min)</div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px; line-height: 1.4;">
+          Contratação emergencial com despacho sob demanda e tabelas de preço fixo (R$ 49 a R$ 499). Monetização instantânea com take-rate de 15%.
+        </div>
+      </div>
+
+      <div class="workly-feat-box">
+        <div style="font-size: 18px; margin-bottom: 4px;">⭐</div>
+        <div style="font-weight: 700; font-size: 13px; color: #f1f5f9;">Workly Score (0-1000)</div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px; line-height: 1.4;">
+          Algoritmo proprietário de reputação: profissionais acima de 850 pontos ganham taxa reduzida (10%) e prioridade máxima na distribuição de vagas.
+        </div>
+      </div>
+
+      <div class="workly-feat-box">
+        <div style="font-size: 18px; margin-bottom: 4px;">🔌</div>
+        <div style="font-weight: 700; font-size: 13px; color: #f1f5f9;">Back-end API Operacional</div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px; line-height: 1.4;">
+          API REST completa em TypeScript na porta 5001 com rotas de Auth, Vagas, Carteira Pay, Escrow e Webhooks Pix automatizados.
+        </div>
+      </div>
+    </div>
+
+    <!-- PAINEL DE TESTE DA API AO VIVO -->
+    <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px; margin-bottom: 18px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 12px; font-weight: 600; color: #94a3b8;">📡 Status do Servidor Back-end:</span>
+        <span id="api-status-badge" style="font-size: 11px; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 6px;">Verificando...</span>
+      </div>
+      <div id="api-status-details" style="font-size: 11px; color: #64748b; font-family: monospace; margin-top: 6px; word-break: break-all;">
+        Conectando em http://localhost:5001/health ...
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 10px;">
+        <button class="workly-btn-secondary" onclick="checkApiHealth()">Testar Conexão Novamente</button>
+        <button class="workly-btn-secondary" onclick="window.open('/api/v1/jobs', '_blank')">Ver Feed de Jobs (JSON)</button>
+      </div>
+    </div>
+
+    <button class="workly-btn-primary" onclick="toggleWorklyPres(false)">
+      <span>Acessar Login do Workly</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  function toggleWorklyPres(show) {
+    const modal = document.getElementById('workly-pres-modal');
+    if (modal) {
+      if (show) modal.classList.remove('hidden');
+      else modal.classList.add('hidden');
+    }
+  }
+
+  async function checkApiHealth() {
+    const badge = document.getElementById('api-status-badge');
+    const details = document.getElementById('api-status-details');
+    try {
+      const res = await fetch('/health');
+      if (res.ok) {
+        const data = await res.json();
+        badge.textContent = 'ONLINE (Porta 5001)';
+        badge.style.color = '#10b981';
+        badge.style.background = 'rgba(16, 185, 129, 0.15)';
+        details.textContent = JSON.stringify(data);
+      } else {
+        badge.textContent = 'Status: ' + res.status;
+        badge.style.color = '#f59e0b';
+      }
+    } catch (e) {
+      badge.textContent = 'DESCONECTADO';
+      badge.style.color = '#ef4444';
+      badge.style.background = 'rgba(239, 68, 68, 0.15)';
+      details.textContent = 'Erro ao conectar: ' + e.message;
+    }
+  }
+
+  // Executa checagem inicial
+  window.addEventListener('load', () => {
+    checkApiHealth();
+    // Exibe a apresentação ao acessar a tela de login ou raiz
+    const isLogin = window.location.pathname.includes('/login') || window.location.pathname === '/' || window.location.search.includes('apresentacao');
+    if (isLogin) {
+      toggleWorklyPres(true);
+    }
+  });
+</script>
+
 <script src="https://cdn.gpteng.co/lovable.js" type="module"></script></body></html>

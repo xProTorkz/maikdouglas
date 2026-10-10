@@ -8,38 +8,58 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const uuid_1 = require("uuid");
 const JWT_SECRET = process.env.JWT_SECRET || 'workly-secret-key-2026';
-// Memória operacional para execução imediata / sincronização com banco
+// Memória operacional com contas demonstrativas oficiais
 exports.mockUsers = [
     {
         id: 'user-001-prof',
-        nome: 'Rafael Lima',
-        email: 'rafael@workly.com.br',
+        nome: 'Lucas Vinícius',
+        email: 'lucas@workly.com',
         senhaHash: bcryptjs_1.default.hashSync('123456', 8),
-        telefone: '64999990001',
+        telefone: '11999887766',
         role: 'profissional',
         tipoPessoa: 'pf',
-        profissao: 'Desenvolvedor Full-Stack',
-        cidade: 'Goiânia',
-        estado: 'GO',
-        worklyScore: 920,
-        scoreTier: 'diamante',
-        verificado: true,
-        eliteMember: true
-    },
-    {
-        id: 'user-002-empresa',
-        nome: 'Construtech Engenharia',
-        email: 'contato@construtech.com.br',
-        senhaHash: bcryptjs_1.default.hashSync('123456', 8),
-        telefone: '64999990002',
-        role: 'empresa',
-        tipoPessoa: 'pj',
-        cidade: 'Goiânia',
-        estado: 'GO',
-        worklyScore: 850,
+        profissao: 'Especialista Elétrica & Full-Stack',
+        cidade: 'São Paulo',
+        estado: 'SP',
+        worklyScore: 885,
         scoreTier: 'ouro',
         verificado: true,
-        eliteMember: false
+        eliteMember: true,
+        avatar: '🧑‍💻'
+    },
+    {
+        id: 'user-lara-nubank',
+        nome: 'Lara — RH Nubank',
+        email: 'lara@nubank.com.br',
+        senhaHash: bcryptjs_1.default.hashSync('123456', 8),
+        telefone: '11988776655',
+        role: 'empresa',
+        tipoPessoa: 'pj',
+        profissao: 'Recrutadora & Gestora de Facilities',
+        cidade: 'São Paulo',
+        estado: 'SP',
+        worklyScore: 940,
+        scoreTier: 'diamante',
+        verificado: true,
+        eliteMember: true,
+        avatar: '💼'
+    },
+    {
+        id: 'user-carlos-contratante',
+        nome: 'Carlos Mendes',
+        email: 'carlos@gmail.com',
+        senhaHash: bcryptjs_1.default.hashSync('123456', 8),
+        telefone: '11977665544',
+        role: 'contratante',
+        tipoPessoa: 'pf',
+        profissao: 'Contratante Residencial',
+        cidade: 'Campinas',
+        estado: 'SP',
+        worklyScore: 780,
+        scoreTier: 'prata',
+        verificado: true,
+        eliteMember: false,
+        avatar: '🏢'
     }
 ];
 class AuthController {

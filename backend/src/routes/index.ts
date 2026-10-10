@@ -3,6 +3,8 @@ import { AuthController } from '../controllers/authController';
 import { JobController } from '../controllers/jobController';
 import { WalletController } from '../controllers/walletController';
 import { ScoreController } from '../controllers/scoreController';
+import { ChatController } from '../controllers/chatController';
+import { SubmenuController } from '../controllers/submenuController';
 import { authMiddleware } from '../middlewares/auth';
 
 const router = Router();
@@ -25,5 +27,18 @@ router.post('/wallet/escrow/release', authMiddleware, WalletController.liberarPa
 
 // 4. ROTAS DE SCORE & REPUTAÇÃO
 router.get('/score', authMiddleware, ScoreController.getScore);
+router.get('/score/breakdown', SubmenuController.getScoreBreakdown);
+
+// 5. ROTAS DE CHAT & MENSAGENS EM TEMPO REAL
+router.get('/conversations', ChatController.listConversations);
+router.get('/conversations/:id/messages', ChatController.getMessages);
+router.post('/conversations/:id/messages', ChatController.sendMessage);
+router.post('/conversations/:id/release-escrow', ChatController.releaseEscrow);
+
+// 6. ROTAS DE SUBMENUS & SUPORTE WEX AI
+router.get('/proposals', SubmenuController.listProposals);
+router.get('/wallet/statement', SubmenuController.getWalletStatement);
+router.post('/wallet/withdraw', SubmenuController.requestWithdraw);
+router.post('/support/chat', SubmenuController.chatWithWex);
 
 export default router;

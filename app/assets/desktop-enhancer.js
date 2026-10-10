@@ -92,17 +92,19 @@
       { to: '/home', icon: '🏠', label: 'Início', group: 'Principal' },
       { to: '/oportunidades', icon: '💼', label: 'Vagas & Serviços', badge: '2.1k', group: 'Principal' },
       { to: '/express', icon: '⚡', label: 'Workly Express', badge: 'Urgente', group: 'Principal' },
-      { to: '/chat', icon: '💬', label: 'Mensagens', group: 'Principal' },
+      { to: '#chat', action: "window.worklyOpenChat('conv-01')", icon: '💬', label: 'Chat Interno Real', badge: 'Ativo', group: 'Principal' },
       { to: '/perfil', icon: '👤', label: 'Meu Perfil', group: 'Principal' },
 
-      { to: '/pay', icon: '💳', label: 'Workly Pay (Carteira)', group: 'Finanças & Garantia' },
-      { to: '/score', icon: '⭐', label: 'Workly Score (0-1000)', group: 'Finanças & Garantia' },
+      { to: '#propostas', action: "window.worklyOpenSubmenu('propostas')", icon: '📋', label: 'Minhas Propostas', group: 'Finanças & Garantia' },
+      { to: '#extrato', action: "window.worklyOpenSubmenu('extrato')", icon: '💳', label: 'Extrato & Saque Pix', group: 'Finanças & Garantia' },
+      { to: '#score', action: "window.worklyOpenSubmenu('score')", icon: '⭐', label: 'Pilares do Score', group: 'Finanças & Garantia' },
       { to: '/verified', icon: '🛡️', label: 'Workly Verified', badge: 'Selo Pro', group: 'Finanças & Garantia' },
 
+      { to: '#wex-ai', action: "window.worklyOpenSubmenu('wex_ai')", icon: '🦁', label: 'Suporte Wex AI', badge: '24/7', group: 'Assistência & Ajustes' },
+      { to: '#conta', action: "window.worklyShowAccountSwitcher()", icon: '⚙️', label: 'Trocar Conta / Login', group: 'Assistência & Ajustes' },
       { to: '/empresas', icon: '🏢', label: 'Para Empresas', group: 'Negócios' },
-      { to: '/publicar-servico', icon: '➕', label: 'Publicar Vaga / Serviço', group: 'Negócios' },
-      { to: '/notificacoes', icon: '🔔', label: 'Notificações', group: 'Negócios' },
-      { to: '/login', icon: '🔐', label: 'Tela de Login', group: 'Acesso' }
+      { to: '/publicar-servico', icon: '➕', label: 'Publicar Vaga', group: 'Negócios' },
+      { to: '/notificacoes', icon: '🔔', label: 'Notificações', group: 'Negócios' }
     ];
 
     let currentGroup = '';
@@ -113,11 +115,13 @@
         currentGroup = item.group;
         navHtml += `<div class="workly-nav-group-title">${currentGroup}</div>`;
       }
-      const isActive = pathname === item.to || (item.to !== '/home' && pathname.startsWith(item.to));
-      const badgeHtml = item.badge ? `<span class="workly-nav-badge" style="background: ${item.badge === 'Urgente' ? 'rgba(239, 68, 68, 0.2); color: #f87171;' : 'rgba(15, 111, 255, 0.2); color: #60a5fa;'}">${item.badge}</span>` : '';
+      const isActive = pathname === item.to || (item.to !== '/home' && !item.to.startsWith('#') && pathname.startsWith(item.to));
+      const badgeHtml = item.badge ? `<span class="workly-nav-badge" style="background: ${item.badge === 'Urgente' ? 'rgba(239, 68, 68, 0.2); color: #f87171;' : item.badge === 'Ativo' ? 'rgba(16, 185, 129, 0.2); color: #34d399;' : 'rgba(15, 111, 255, 0.2); color: #60a5fa;'}">${item.badge}</span>` : '';
+
+      const clickAttr = item.action ? `onclick="${item.action}; return false;"` : '';
 
       navHtml += `
-        <a href="${item.to}" class="workly-nav-item ${isActive ? 'active' : ''}">
+        <a href="${item.to}" class="workly-nav-item ${isActive ? 'active' : ''}" ${clickAttr}>
           <span style="font-size: 16px;">${item.icon}</span>
           <span>${item.label}</span>
           ${badgeHtml}

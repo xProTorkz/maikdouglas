@@ -5,6 +5,8 @@ const authController_1 = require("../controllers/authController");
 const jobController_1 = require("../controllers/jobController");
 const walletController_1 = require("../controllers/walletController");
 const scoreController_1 = require("../controllers/scoreController");
+const chatController_1 = require("../controllers/chatController");
+const submenuController_1 = require("../controllers/submenuController");
 const auth_1 = require("../middlewares/auth");
 const router = (0, express_1.Router)();
 // 1. ROTAS DE AUTENTICAÇÃO
@@ -22,4 +24,15 @@ router.post('/wallet/escrow/create', auth_1.authMiddleware, walletController_1.W
 router.post('/wallet/escrow/release', auth_1.authMiddleware, walletController_1.WalletController.liberarPagamento);
 // 4. ROTAS DE SCORE & REPUTAÇÃO
 router.get('/score', auth_1.authMiddleware, scoreController_1.ScoreController.getScore);
+router.get('/score/breakdown', submenuController_1.SubmenuController.getScoreBreakdown);
+// 5. ROTAS DE CHAT & MENSAGENS EM TEMPO REAL
+router.get('/conversations', chatController_1.ChatController.listConversations);
+router.get('/conversations/:id/messages', chatController_1.ChatController.getMessages);
+router.post('/conversations/:id/messages', chatController_1.ChatController.sendMessage);
+router.post('/conversations/:id/release-escrow', chatController_1.ChatController.releaseEscrow);
+// 6. ROTAS DE SUBMENUS & SUPORTE WEX AI
+router.get('/proposals', submenuController_1.SubmenuController.listProposals);
+router.get('/wallet/statement', submenuController_1.SubmenuController.getWalletStatement);
+router.post('/wallet/withdraw', submenuController_1.SubmenuController.requestWithdraw);
+router.post('/support/chat', submenuController_1.SubmenuController.chatWithWex);
 exports.default = router;

@@ -45,5 +45,11 @@ Implementar a arquitetura completa do backend da plataforma **Workly**, fornecen
   - Simulador interativo do Workly Score no aplicativo (`window.worklySimulateScoreChange`) com progressão dinâmica de níveis e impacto imediato nas taxas de comissão.
   - Novos endpoints no backend (`/wallet/escrow/generate-pix`, `/wallet/escrow/simulate-payment`, `/wallet/escrow/validate-code`) compilados com 0 erros no TypeScript.
 
+- [x] **Etapa 14:** Fila de Produção & Infraestrutura Sincronizada no GitHub:
+  - Especificação detalhada da esteira de Go-Live e Infraestrutura criada em `PROMPT_FILA_GITHUB_PRODUCAO.md` e `.github/prompts/SPRINT_PRODUCAO_INFRA.md`.
+  - Suporte completo a PWA (Progressive Web App) configurado em `app/manifest.json`, `app/service-worker.js` e registrado em `app/index.html` para instalação nativa no celular.
+  - Módulo de configuração de banco de dados relacional criado em `backend/src/database/db.ts` para conexão com PostgreSQL / Supabase.
+  - Backlog operacional priorizado para implantação do piloto em Goiatuba/Goiás.
+
 ## Status Final
-**CONCLUÍDO, TESTADO E SINCRONIZADO NO GITHUB (PRONTO PARA EXECUÇÃO DA FILA)**
+**FILA DE PRODUÇÃO ATIVA, SINCRONIZADA E DISPONÍVEL NO GITHUB**

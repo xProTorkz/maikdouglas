@@ -1,0 +1,23 @@
+{
+  "name": "Workly — O SuperApp do Trabalho que Conecta",
+  "short_name": "Workly",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#08142E",
+  "theme_color": "#08142E",
+  "description": "Encontre vagas, ofereça serviços e contrate profissionais com garantia Pix e Workly Score.",
+  "icons": [
+    {
+      "src": "/__l5e/assets-v1/8ecfe286-e5fa-4906-99b5-be4b72dfe1e7/wex.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/__l5e/assets-v1/8ecfe286-e5fa-4906-99b5-be4b72dfe1e7/wex.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

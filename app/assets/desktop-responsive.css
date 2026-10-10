@@ -1,0 +1,269 @@
+/* ==========================================================================
+   WORKLY — MOTOR DE RESPONSIVIDADE & EXPERIÊNCIA DESKTOP AVANÇADA
+   ========================================================================== */
+
+/* VARIÁVEIS DESKTOP */
+:root {
+  --desktop-sidebar-w: 280px;
+  --desktop-topbar-h: 64px;
+}
+
+/* TOPBAR DE CONTROLE DE VISUALIZAÇÃO DESKTOP */
+#workly-desktop-topbar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--desktop-topbar-h);
+  background: rgba(7, 16, 39, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 99990;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.workly-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: #fff;
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.workly-view-switcher {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.workly-view-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.workly-view-btn.active {
+  background: linear-gradient(135deg, #0f6fff 0%, #8a3ffc 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(15, 111, 255, 0.4);
+}
+
+/* SIDEBAR DESKTOP */
+#workly-desktop-sidebar {
+  display: none;
+  position: fixed;
+  top: var(--desktop-topbar-h);
+  left: 0;
+  bottom: 0;
+  width: var(--desktop-sidebar-w);
+  background: rgba(11, 21, 48, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 99980;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px 16px 24px;
+  overflow-y: auto;
+}
+
+.workly-nav-group-title {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin: 16px 12px 8px;
+}
+
+.workly-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  margin-bottom: 3px;
+}
+
+.workly-nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  transform: translateX(3px);
+}
+
+.workly-nav-item.active {
+  background: linear-gradient(135deg, rgba(15, 111, 255, 0.2) 0%, rgba(138, 63, 252, 0.2) 100%);
+  border: 1px solid rgba(15, 111, 255, 0.35);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.workly-nav-badge {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-weight: 700;
+}
+
+/* SIDEBAR FOOTER CARD */
+.workly-user-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ==========================================================================
+   COMPORTAMENTO EM TELAS GRANDES (DESKTOP / NOTEBOOK >= 1024px)
+   ========================================================================== */
+@media (min-width: 1024px) {
+  #workly-desktop-topbar {
+    display: flex;
+  }
+
+  body.desktop-view #workly-desktop-sidebar {
+    display: flex;
+  }
+
+  /* MODO DESKTOP EXPANDIDO */
+  body.desktop-view {
+    padding-top: var(--desktop-topbar-h);
+    background: radial-gradient(circle at 15% 20%, rgba(15, 111, 255, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(138, 63, 252, 0.12) 0%, transparent 45%),
+                #071027 !important;
+  }
+
+  /* EXPANSÃO RESPONSIVA DO CONTEÚDO PRINCIPAL (DASHBOARD) */
+  body.desktop-view .max-w-md {
+    max-width: 1100px !important;
+    margin-left: calc(var(--desktop-sidebar-w) + 36px) !important;
+    margin-right: auto !important;
+    padding-left: 20px !important;
+    padding-right: 36px !important;
+    transition: max-width 0.3s ease, margin 0.3s ease;
+  }
+
+  /* OCULTA NAVEGAÇÃO MOBILE INFERIOR NO DESKTOP */
+  body.desktop-view nav.fixed.inset-x-0.bottom-0 {
+    display: none !important;
+  }
+
+  body.desktop-view main.pb-28 {
+    padding-bottom: 48px !important;
+  }
+
+  /* GRIDS RESPONSIVOS EXPANDIDOS */
+  body.desktop-view .grid-cols-2 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+  }
+
+  body.desktop-view .grid-cols-4 {
+    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
+
+  /* HERO BANNER EM FORMATO WIDESCREEN */
+  body.desktop-view .gradient-primary.p-5 {
+    padding: 36px 44px !important;
+    border-radius: 32px !important;
+  }
+
+  body.desktop-view .gradient-primary .max-w-\[65\%\] {
+    max-width: 72% !important;
+  }
+
+  body.desktop-view .gradient-primary h2 {
+    font-size: 32px !important;
+    line-height: 1.2 !important;
+  }
+
+  /* RESPONSIVIDADE NA TELA DE LOGIN NO COMPUTADOR */
+  body.desktop-view.route-login #workly-desktop-sidebar {
+    display: none !important;
+  }
+
+  body.desktop-view.route-login .max-w-md {
+    max-width: 480px !important;
+    margin: 40px auto !important;
+    padding: 36px !important;
+    background: rgba(14, 25, 52, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 32px !important;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 35px rgba(15, 111, 255, 0.25) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+  }
+
+  /* ==========================================================================
+     MODO SIMULADOR MOBILE (MOCKUP REAL DE SMARTPHONE)
+     ========================================================================== */
+  body.mobile-sim-view {
+    padding-top: var(--desktop-topbar-h);
+    background: #030816 !important;
+  }
+
+  body.mobile-sim-view #workly-desktop-sidebar {
+    display: none !important;
+  }
+
+  body.mobile-sim-view .max-w-md {
+    max-width: 420px !important;
+    margin: 30px auto 60px !important;
+    background: #071027 !important;
+    border-radius: 46px !important;
+    box-shadow: 0 0 0 12px #182238, 0 25px 60px -10px rgba(0, 0, 0, 0.9), 0 0 45px rgba(15, 111, 255, 0.3) !important;
+    overflow: hidden !important;
+    position: relative !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  }
+
+  /* Barra de navegação inferior visível no simulador */
+  body.mobile-sim-view nav.fixed.inset-x-0.bottom-0 {
+    display: block !important;
+    max-width: 420px !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* ==========================================================================
+   TABLET / TELAS MÉDIAS (768px a 1023px)
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .max-w-md {
+    max-width: 700px !important;
+  }
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
+}

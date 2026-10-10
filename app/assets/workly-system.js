@@ -732,9 +732,66 @@
     window.worklyOpenSubmenu('score');
   };
 
+  // 4.4. INSTALAÇÃO PWA NO CELULAR & DESKTOP
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    window.worklyShowInstallBanner();
+  });
+
+  window.worklyShowInstallBanner = function () {
+    if (document.getElementById('workly-pwa-install-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'workly-pwa-install-banner';
+    banner.style.cssText = 'position: fixed; bottom: 75px; left: 50%; transform: translateX(-50%); z-index: 99999; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); color: #fff; padding: 10px 20px; border-radius: 9999px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 25px rgba(15,111,255,0.4); font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid rgba(255,255,255,0.2);';
+    banner.innerHTML = `
+      <span>📲 Instalar Workly no Celular</span>
+      <span style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px;">⬇️</span>
+    `;
+    banner.onclick = () => {
+      window.worklyTriggerInstall();
+    };
+    document.body.appendChild(banner);
+  };
+
+  window.worklyTriggerInstall = function () {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          const b = document.getElementById('workly-pwa-install-banner');
+          if (b) b.remove();
+        }
+        deferredPrompt = null;
+      });
+    } else {
+      alert('📱 Instalação do Workly PWA:\n\n• No Android/Chrome: Toque nos 3 pontinhos do navegador e selecione "Instalar aplicativo".\n• No iPhone/Safari: Toque no botão de Compartilhar (ícone com seta) e escolha "Adicionar à Tela de Início".');
+    }
+  };
+
+  // 4.5. CLIENTE WEBSOCKET (SOCKET.IO)
+  let worklySocket = null;
+  function initSocketClient() {
+    if (typeof io !== 'undefined') {
+      try {
+        worklySocket = io();
+        worklySocket.on('connect', () => {
+          console.log('🟢 Conectado ao servidor WebSocket Workly:', worklySocket.id);
+        });
+        worklySocket.on('receive_message', (msg) => {
+          console.log('📩 Mensagem recebida via WebSocket:', msg);
+        });
+      } catch (err) {
+        console.warn('WebSocket:', err);
+      }
+    }
+  }
+
   // 5. INICIALIZAÇÃO E INTERCEPTADORES NA INTERFACE
   function initEnhancements() {
     updateInterfaceUser();
+    initSocketClient();
 
     // Se estiver na rota /chat, abre o chat interno automaticamente!
     if (window.location.pathname.includes('/chat')) {

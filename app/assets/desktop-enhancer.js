@@ -103,6 +103,7 @@
       { to: '/verified', icon: '🛡️', label: 'Workly Verified', badge: 'Selo Pro', group: 'Finanças & Garantia' },
 
       { to: '#wex-ai', action: "window.worklyOpenSubmenu('wex_ai')", icon: '🦁', label: 'Suporte Wex AI', badge: '24/7', group: 'Assistência & Ajustes' },
+      { to: '#instalar-app', action: "window.worklyTriggerInstall()", icon: '📲', label: 'Instalar App (PWA)', badge: 'App', group: 'Assistência & Ajustes' },
       { to: '#conta', action: "window.worklyShowAccountSwitcher()", icon: '⚙️', label: 'Trocar Conta / Login', group: 'Assistência & Ajustes' },
       { to: '/empresas', icon: '🏢', label: 'Para Empresas', group: 'Negócios' },
       { to: '/publicar-servico', icon: '➕', label: 'Publicar Vaga', group: 'Negócios' },

@@ -857,12 +857,16 @@
         })
       });
       if (res.ok) {
-        alert('🎉 Vaga publicada com sucesso no Workly!');
+        showToast('🎉 Vaga publicada com sucesso no Workly!');
         document.getElementById('workly-submenu-modal')?.remove();
-        window.worklyOpenSubmenu('vagas');
+        if (window.location.pathname === '/oportunidades') {
+          setTimeout(() => window.location.reload(), 500);
+        } else {
+          setTimeout(() => { window.location.href = '/oportunidades'; }, 500);
+        }
       }
     } catch (err) {
-      alert('Erro ao publicar: ' + err.message);
+      showToast('Erro ao publicar: ' + err.message, 'error');
     }
   };
 
@@ -1028,6 +1032,7 @@
       font-weight: 800;
       font-size: 13px;
       cursor: pointer;
+      text-decoration: none;
       box-shadow: 0 10px 25px -4px rgba(15, 111, 255, 0.5), 0 0 15px rgba(138, 63, 252, 0.4);
       border: 1px solid rgba(255,255,255,0.2);
       transition: transform 0.2s, box-shadow 0.2s;
@@ -1038,7 +1043,10 @@
     `;
     fab.onmouseover = () => { fab.style.transform = 'translateY(-2px) scale(1.02)'; };
     fab.onmouseout = () => { fab.style.transform = 'none'; };
-    fab.onclick = () => { window.worklyOpenSubmenu('publicar_vaga'); };
+    fab.onclick = (e) => {
+      e.preventDefault();
+      window.location.href = '/publicar-servico';
+    };
 
     document.body.appendChild(fab);
   }
@@ -1046,52 +1054,6 @@
   // Intercepta rotas e formulários na página
   function checkRouteInterceptors() {
     renderFloatingPublishButton();
-
-    // Se estiver em /publicar-servico, garante que o botão do DOM funcione
-    if (window.location.pathname.includes('/publicar-servico')) {
-      const btn = Array.from(document.querySelectorAll('button')).find(b => (b.innerText || '').includes('Publicar agora'));
-      if (btn && !btn.getAttribute('data-workly-bound')) {
-        btn.setAttribute('data-workly-bound', 'true');
-        btn.onclick = async (e) => {
-          e.preventDefault();
-          const inputs = document.querySelectorAll('input, textarea, select');
-          const titleInput = Array.from(inputs).find(i => i.placeholder?.includes('título') || i.placeholder?.includes('serviço'));
-          const priceInput = Array.from(inputs).find(i => i.placeholder?.includes('500') || i.type === 'number');
-          const descInput = document.querySelector('textarea');
-          const catSelect = document.querySelector('select');
-
-          const titulo = titleInput?.value || 'Serviço Profissional';
-          const orcamento = priceInput?.value || '250';
-          const categoria = catSelect?.value || 'Construção';
-          const descricao = descInput?.value || 'Solicitação de serviço via plataforma';
-
-          const user = getCurrentUser();
-          try {
-            const res = await fetch(`${API_BASE}/jobs`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                titulo,
-                orcamento: parseFloat(orcamento) || 250,
-                categoria,
-                descricao,
-                telefone: user.telefone || '11999887766',
-                cidade: 'São Paulo',
-                estado: 'SP',
-                contratanteId: user.id,
-                contratanteNome: user.nome
-              })
-            });
-            if (res.ok) {
-              alert('🎉 Vaga publicada com sucesso no feed!');
-              window.location.href = '/oportunidades';
-            }
-          } catch (err) {
-            alert('Erro ao publicar: ' + err.message);
-          }
-        };
-      }
-    }
   }
 
   // Inicialização

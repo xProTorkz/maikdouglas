@@ -355,6 +355,7 @@
 <!-- WORKLY APRESENTAÇÃO INTEGRADA NATIVAMENTE NO LAYOUT (SEM POPUPS) -->
 <style>
   #workly-integrated-showcase {
+    display: none;
     max-width: 1040px;
     margin: 24px auto 40px;
     padding: 24px;
@@ -364,6 +365,10 @@
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(15, 111, 255, 0.2);
     color: #f8fafc;
     font-family: 'Sora', 'Manrope', system-ui, sans-serif;
+  }
+  body.route-login #workly-integrated-showcase,
+  #workly-integrated-showcase.is-active {
+    display: block !important;
   }
   .workly-pill {
     display: inline-flex;

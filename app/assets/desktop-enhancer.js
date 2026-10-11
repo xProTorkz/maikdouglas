@@ -90,7 +90,7 @@
 
     const navItems = [
       { to: '/home', icon: '🏠', label: 'Início', group: 'Principal' },
-      { to: '#vagas', action: "window.worklyOpenSubmenu('vagas')", icon: '💼', label: 'Vagas & Oportunidades', badge: '2.1k', group: 'Principal' },
+      { to: '/oportunidades', icon: '💼', label: 'Vagas & Oportunidades', badge: '2.1k', group: 'Principal' },
       { to: '/express', icon: '⚡', label: 'Workly Express', badge: 'Urgente', group: 'Principal' },
       { to: '#chat', action: "window.worklyOpenChat('conv-01')", icon: '💬', label: 'Chat Interno Real', badge: 'Ativo', group: 'Principal' },
       { to: '/perfil', icon: '👤', label: 'Meu Perfil', group: 'Principal' },
@@ -102,7 +102,7 @@
       { to: '#score', action: "window.worklyOpenSubmenu('score')", icon: '⭐', label: 'Pilares & Simulador Score', group: 'Finanças & Garantia' },
       { to: '/verified', icon: '🛡️', label: 'Workly Verified', badge: 'Selo Pro', group: 'Finanças & Garantia' },
 
-      { to: '#publicar-vaga', action: "window.worklyOpenSubmenu('publicar_vaga')", icon: '➕', label: 'Publicar Vaga', badge: 'Novo', group: 'Gestão de Vagas' },
+      { to: '/publicar-servico', icon: '➕', label: 'Publicar Vaga', badge: 'Novo', group: 'Gestão de Vagas' },
       { to: '#meus-anuncios', action: "window.worklyOpenSubmenu('meus_anuncios')", icon: '📢', label: 'Meus Anúncios', group: 'Gestão de Vagas' },
 
       { to: '#wex-ai', action: "window.worklyOpenSubmenu('wex_ai')", icon: '🦁', label: 'Suporte Wex AI', badge: '24/7', group: 'Assistência & Ajustes' },
@@ -176,6 +176,15 @@
   // Inicialização global
   window.worklySetMode = function (mode) {
     setViewMode(mode);
+  };
+
+  window.toggleWorklyPres = function (force) {
+    const el = document.getElementById('workly-integrated-showcase');
+    if (!el) return;
+    el.classList.toggle('is-active');
+    if (el.classList.contains('is-active')) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   function init() {

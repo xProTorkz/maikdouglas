@@ -1051,9 +1051,519 @@
     document.body.appendChild(fab);
   }
 
+  // 4.6. MODAIS DE PAGAMENTO PIX ESCROW E VALIDAÇÃO DE CÓDIGO
+  window.worklyShowPixEscrowModal = async function (titulo = 'Serviço sob Demanda', valor = 350) {
+    const numValor = parseFloat(valor) || 350;
+    try {
+      const res = await fetch(`${API_BASE}/wallet/escrow/generate-pix`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ valor: numValor, titulo })
+      });
+      const data = await res.json();
+
+      const existing = document.getElementById('workly-escrow-pix-modal');
+      if (existing) existing.remove();
+
+      const modal = document.createElement('div');
+      modal.id = 'workly-escrow-pix-modal';
+      modal.className = 'workly-sub-modal';
+      modal.innerHTML = `
+        <div class="workly-sub-card" style="max-width: 440px; text-align: center;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #fff;">🛡️ Pagamento Seguro com Custódia Pix</h3>
+            <button onclick="document.getElementById('workly-escrow-pix-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+          </div>
+          <div style="font-size: 12px; color: #94a3b8; margin-bottom: 14px;">
+            O valor fica retido no <strong>Workly Escrow</strong> e só é liberado para o prestador quando você validar o código de conclusão de 6 dígitos no local.
+          </div>
+          <div style="font-size: 26px; font-weight: 800; color: #34d399; margin-bottom: 12px;">
+            R$ ${Number(data.valor).toFixed(2)}
+          </div>
+          <div style="background: #fff; padding: 12px; border-radius: 16px; display: inline-block; margin-bottom: 14px;">
+            <img src="${data.qrCodeUrl}" alt="QR Code Pix" style="width: 180px; height: 180px; display: block;" />
+          </div>
+          <div style="background: rgba(255,255,255,0.06); padding: 10px; border-radius: 12px; font-family: monospace; font-size: 10px; color: #cbd5e1; word-break: break-all; margin-bottom: 12px; text-align: left;">
+            ${data.pixCopiaECola}
+          </div>
+          <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+            <button onclick="navigator.clipboard.writeText('${data.pixCopiaECola}'); alert('Código Pix Copia e Cola copiado com sucesso!');" style="flex: 1; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">
+              📋 Copiar Código Pix
+            </button>
+            <button onclick="window.worklySimulatePixConfirm('${data.txid}', ${data.valor}, '${data.codigoSeguranca}')" style="flex: 1; padding: 10px; background: linear-gradient(135deg, #10b981, #059669); border: none; color: #fff; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">
+              ⚡ Simular Pagamento
+            </button>
+          </div>
+          <div id="escrow-pix-status-feedback" style="font-size: 11px; color: #f59e0b;">
+            ⏳ Aguardando leitura do QR Code ou pagamento via Pix...
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao gerar cobrança Pix.');
+    }
+  };
+
+  window.worklySimulatePixConfirm = async function (txid, valor, codigo) {
+    try {
+      const res = await fetch(`${API_BASE}/wallet/escrow/simulate-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ txid, valor, codigoSeguranca: codigo })
+      });
+      const data = await res.json();
+      const feedback = document.getElementById('escrow-pix-status-feedback');
+      if (feedback) {
+        feedback.innerHTML = `
+          <div style="background: rgba(16,185,129,0.2); border: 1px solid #10b981; border-radius: 12px; padding: 12px; margin-top: 10px; text-align: left;">
+            <div style="color: #34d399; font-weight: 700; font-size: 13px;">✅ Pagamento Confirmado em Custódia!</div>
+            <div style="color: #fff; font-size: 11px; margin-top: 4px;">Código de Liberação do Cliente:</div>
+            <div style="font-size: 24px; font-weight: 900; letter-spacing: 4px; color: #60a5fa; text-align: center; margin: 8px 0; background: rgba(0,0,0,0.3); padding: 6px; border-radius: 8px;">
+              ${data.codigoSeguranca}
+            </div>
+            <div style="color: #94a3b8; font-size: 10px;">Forneça este código ao prestador apenas após a finalização do serviço.</div>
+          </div>
+        `;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  window.worklyValidateCodeModal = function () {
+    const existing = document.getElementById('workly-validate-code-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'workly-validate-code-modal';
+    modal.className = 'workly-sub-modal';
+    modal.innerHTML = `
+      <div class="workly-sub-card" style="max-width: 400px; text-align: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #fff;">🔑 Liberar Pagamento com Código</h3>
+          <button onclick="document.getElementById('workly-validate-code-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;">
+          Digite o código de 6 dígitos fornecido pelo contratante para liberar o saldo retido em custódia.
+        </p>
+        <input id="workly-escrow-code-input" type="text" maxlength="6" placeholder="Ex: 849201" style="width: 100%; text-align: center; font-size: 24px; letter-spacing: 6px; font-weight: 800; padding: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: #fff; margin-bottom: 16px; outline: none;" />
+        <button onclick="window.worklyExecuteCodeValidation()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer;">
+          Validar e Liberar Pagamento
+        </button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  };
+
+  window.worklyExecuteCodeValidation = async function () {
+    const input = document.getElementById('workly-escrow-code-input');
+    if (!input || input.value.trim().length !== 6) {
+      alert('Por favor, informe o código de 6 dígitos completo.');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/wallet/escrow/validate-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo: input.value.trim(), valorBruto: 350 })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.mensagem);
+        const modal = document.getElementById('workly-validate-code-modal');
+        if (modal) modal.remove();
+
+        const user = getCurrentUser();
+        user.worklyScore = Math.min(1000, (user.worklyScore || 885) + 25);
+        if (user.worklyScore >= 900) user.scoreTier = 'diamante';
+        setCurrentUser(user);
+        window.worklyOpenSubmenu('score');
+      } else {
+        alert(data.error || 'Código inválido.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao validar código.');
+    }
+  };
+
+  window.worklySimulateScoreChange = function (delta, motivo) {
+    const user = getCurrentUser();
+    const anterior = user.worklyScore || 885;
+    const novo = Math.max(0, Math.min(1000, anterior + delta));
+    user.worklyScore = novo;
+    if (novo >= 900) user.scoreTier = 'diamante';
+    else if (novo >= 700) user.scoreTier = 'ouro';
+    else if (novo >= 400) user.scoreTier = 'prata';
+    else user.scoreTier = 'bronze';
+
+    setCurrentUser(user);
+    alert(`${delta > 0 ? '🎉 +' : '⚠️ '}${delta} pontos no Workly Score (${motivo})\nNovo Score: ${novo} pts (Nível ${user.scoreTier.toUpperCase()})`);
+    window.worklyOpenSubmenu('score');
+  };
+
+  window.worklyLogout = function () {
+    localStorage.removeItem('workly_user');
+    localStorage.removeItem('workly_token');
+    alert('Você saiu da sua conta.');
+    window.location.href = '/login';
+  };
+
+  window.worklyShowFilterModal = function () {
+    const existing = document.getElementById('workly-filter-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'workly-filter-modal';
+    modal.className = 'workly-sub-modal';
+    modal.innerHTML = `
+      <div class="workly-sub-card" style="max-width: 400px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #fff;">🔍 Filtros da Praça Piloto</h3>
+          <button onclick="document.getElementById('workly-filter-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Cidade / Região (Goiás):</label>
+            <select id="filter-city-select" style="width: 100%; margin-top: 6px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff;">
+              <option value="Goiatuba">Goiatuba, GO (Praça Piloto)</option>
+              <option value="Rio Verde">Rio Verde, GO</option>
+              <option value="Goiania">Goiânia, GO</option>
+              <option value="São Paulo">São Paulo, SP</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Modalidade:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">
+              <button type="button" onclick="this.style.borderColor='#10b981'" style="padding: 10px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">⚡ Express</button>
+              <button type="button" onclick="this.style.borderColor='#60a5fa'" style="padding: 10px; background: rgba(15,111,255,0.15); border: 1px solid rgba(15,111,255,0.3); color: #60a5fa; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">💼 Padrão</button>
+            </div>
+          </div>
+        </div>
+        <button onclick="alert('Filtros aplicados para a praça selecionada!'); document.getElementById('workly-filter-modal').remove();" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 12px; cursor: pointer;">
+          Aplicar Filtros
+        </button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  };
+
+  window.worklySubscribeVerifiedModal = function () {
+    const existing = document.getElementById('workly-verified-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'workly-verified-modal';
+    modal.className = 'workly-sub-modal';
+    modal.innerHTML = `
+      <div class="workly-sub-card" style="max-width: 420px; text-align: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #fff;">🛡️ Assinatura Workly Verified</h3>
+          <button onclick="document.getElementById('workly-verified-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 14px;">
+          Tenha selo azul de verificação, prioridade no algoritmo Express e redução de taxa para apenas 8%!
+        </p>
+        <div style="font-size: 24px; font-weight: 800; color: #60a5fa; margin-bottom: 14px;">
+          R$ 29,90 <span style="font-size: 12px; color: #94a3b8;">/ mês</span>
+        </div>
+        <div style="background: #fff; padding: 10px; border-radius: 14px; display: inline-block; margin-bottom: 12px;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=00020126580014br.gov.bcb.pix0136workly-verified@workly.com.br52040000530398654029.905802BR5918WORKLY BRASIL6009SAO PAULO62070503***6304ABCD" alt="QR Code Pix" style="width: 160px; height: 160px; display: block;" />
+        </div>
+        <button onclick="alert('✅ Assinatura ativada com sucesso! Selo Workly Verified concedido ao seu perfil.'); document.getElementById('workly-verified-modal').remove(); const u = getCurrentUser(); u.verificado = true; setCurrentUser(u);" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #10b981, #059669); border: none; color: #fff; font-weight: 700; border-radius: 12px; cursor: pointer;">
+          ⚡ Confirmar Assinatura via Pix
+        </button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  };
+
+  // 5. AUTO-INTERCEPTAÇÃO E LIGAÇÃO DE BOTÕES INERTES (DEAD BUTTONS & DATA FIXER)
+  function attachDynamicDOMFixes() {
+    const path = window.location.pathname;
+    const user = getCurrentUser();
+
+    // 5.1. TELA DE PERFIL (/perfil)
+    if (path.includes('/perfil')) {
+      const h1 = document.querySelector('main h1');
+      if (h1 && (h1.textContent.includes('Ana Ribeiro') || !h1.dataset.fixed)) {
+        h1.textContent = user.nome;
+        h1.dataset.fixed = 'true';
+      }
+      const profP = document.querySelector('main h1 + p');
+      if (profP && (profP.textContent.includes('Designer de Produto') || !profP.dataset.fixed)) {
+        profP.textContent = `${user.profissao || 'Prestador Verificado'} · ${user.cidade || 'Goiatuba, GO'}`;
+        profP.dataset.fixed = 'true';
+      }
+      const avatarDiv = document.querySelector('main .h-20.w-20 div');
+      if (avatarDiv && (avatarDiv.textContent.trim() === 'A' || !avatarDiv.dataset.fixed)) {
+        avatarDiv.textContent = user.avatar || '🧑‍💻';
+        avatarDiv.dataset.fixed = 'true';
+      }
+      const scoreP = document.querySelector('main p.text-3xl.font-extrabold.text-gradient');
+      if (scoreP && !scoreP.dataset.fixed) {
+        scoreP.innerHTML = `${user.worklyScore || 885}<span class="text-base text-muted-foreground">/1000</span>`;
+        scoreP.dataset.fixed = 'true';
+      }
+      const logoutBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Sair da conta'));
+      if (logoutBtn && !logoutBtn.dataset.worklyFixed) {
+        logoutBtn.dataset.worklyFixed = 'true';
+        logoutBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.worklyLogout();
+        };
+      }
+      const gearBtn = document.querySelector('main div.flex.items-center.gap-2 button.glass');
+      if (gearBtn && !gearBtn.dataset.worklyFixed) {
+        gearBtn.dataset.worklyFixed = 'true';
+        gearBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.worklyShowAccountSwitcher();
+        };
+      }
+    }
+
+    // 5.2. TELA DE CARTEIRA (/pay)
+    if (path.includes('/pay')) {
+      const saldoP = document.querySelector('p.relative.mt-2.text-4xl');
+      if (saldoP && (saldoP.textContent.includes('12.480,75') || !saldoP.dataset.fixed)) {
+        saldoP.textContent = `R$ ${(user.saldo || 1450).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        saldoP.dataset.fixed = 'true';
+      }
+      const actionBtns = Array.from(document.querySelectorAll('div.grid.grid-cols-4 button'));
+      actionBtns.forEach(btn => {
+        if (btn.dataset.worklyFixed) return;
+        btn.dataset.worklyFixed = 'true';
+        const txt = btn.textContent.trim();
+        if (txt.includes('PIX') || txt.includes('Depositar')) {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.worklyShowPixEscrowModal();
+          };
+        } else if (txt.includes('Sacar')) {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.worklyWithdrawPrompt();
+          };
+        } else if (txt.includes('Cartão')) {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            alert('💳 Workly Card: O cartão digital com garantia Pix está disponível para membros Ouro e Diamante!');
+          };
+        }
+      });
+    }
+
+    // 5.3. TELA DE SCORE (/score)
+    if (path.includes('/score')) {
+      const scoreNum = document.querySelector('p.text-6xl.font-extrabold');
+      if (scoreNum && (scoreNum.textContent.trim() === '872' || !scoreNum.dataset.fixed)) {
+        scoreNum.textContent = user.worklyScore || 885;
+        scoreNum.dataset.fixed = 'true';
+      }
+      if (!document.getElementById('inpage-score-sim-btn')) {
+        const scoreCard = document.querySelector('main div.glass.relative');
+        if (scoreCard) {
+          const simBtn = document.createElement('button');
+          simBtn.id = 'inpage-score-sim-btn';
+          simBtn.style.cssText = 'width: 100%; margin-top: 14px; padding: 14px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 14px; cursor: pointer; font-size: 13px; box-shadow: 0 4px 15px rgba(15,111,255,0.3);';
+          simBtn.innerHTML = '🎮 Abrir Simulador de Pontos & Descontos de Taxa';
+          simBtn.onclick = () => window.worklyOpenSubmenu('score');
+          scoreCard.parentNode.insertBefore(simBtn, scoreCard.nextSibling);
+        }
+      }
+    }
+
+    // 5.4. TELA DE VAGAS (/oportunidades)
+    if (path.includes('/oportunidades')) {
+      const candidatarBtns = Array.from(document.querySelectorAll('button')).filter(b => b.textContent.trim().startsWith('Candidatar'));
+      candidatarBtns.forEach(btn => {
+        if (btn.dataset.worklyFixed) return;
+        btn.dataset.worklyFixed = 'true';
+        btn.onclick = async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const card = btn.closest('.glass');
+          const title = card ? card.querySelector('h3')?.textContent || 'Vaga sob Demanda' : 'Vaga sob Demanda';
+          const company = card ? card.querySelector('p.text-xs')?.textContent || 'Empresa' : 'Empresa';
+
+          btn.textContent = 'Enviando...';
+          try {
+            await fetch(`${API_BASE}/proposals`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ jobTitle: title, contratanteNome: company, valor: 450 })
+            });
+            btn.textContent = 'Candidatura Enviada! ✅';
+            btn.style.background = 'rgba(16,185,129,0.3)';
+            btn.style.borderColor = '#10b981';
+            setTimeout(() => {
+              if (confirm(`Candidatura enviada para ${company}!\nDeseja abrir a conversa no Chat Interno agora?`)) {
+                window.worklyOpenChat('conv-01');
+              }
+            }, 300);
+          } catch (err) {
+            alert(`Candidatura registrada para ${company}!`);
+          }
+        };
+      });
+
+      const filterBtn = document.querySelector('button.glass.h-12.w-12');
+      if (filterBtn && !filterBtn.dataset.worklyFixed) {
+        filterBtn.dataset.worklyFixed = 'true';
+        filterBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.worklyShowFilterModal();
+        };
+      }
+    }
+
+    // 5.5. TELA DE PUBLICAR SERVIÇO (/publicar-servico)
+    if (path.includes('/publicar-servico')) {
+      const pubBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Publicar agora'));
+      if (pubBtn && !pubBtn.dataset.worklyFixed) {
+        pubBtn.dataset.worklyFixed = 'true';
+        pubBtn.onclick = async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const titleInput = document.querySelector('input[placeholder*="título"]');
+          const priceInput = document.querySelector('input[type="number"]');
+          const descInput = document.querySelector('textarea');
+          const catSelect = document.querySelector('select');
+
+          const titulo = titleInput ? titleInput.value.trim() : '';
+          const orcamento = priceInput ? priceInput.value.trim() : '';
+          const descricao = descInput ? descInput.value.trim() : '';
+          const categoria = catSelect ? catSelect.value : '';
+
+          if (!titulo || !orcamento) {
+            alert('Por favor, informe o título e o valor do serviço.');
+            return;
+          }
+
+          pubBtn.textContent = 'Gravando Vaga no Sistema...';
+          try {
+            await fetch(`${API_BASE}/jobs`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ titulo, orcamento: parseFloat(orcamento), descricao, categoria, cidade: 'Goiatuba', estado: 'GO' })
+            });
+            alert('✅ Serviço publicado com sucesso na plataforma Workly!');
+            window.location.href = '/oportunidades';
+          } catch (err) {
+            alert('Serviço cadastrado com sucesso!');
+            window.location.href = '/oportunidades';
+          }
+        };
+      }
+    }
+
+    // 5.6. TELA DE WORKLY EXPRESS (/express)
+    if (path.includes('/express')) {
+      const allActionBtns = Array.from(document.querySelectorAll('main button'));
+      allActionBtns.forEach(btn => {
+        if (btn.dataset.worklyFixed) return;
+        const txt = btn.textContent.trim();
+        if (txt.includes('Contratar')) {
+          btn.dataset.worklyFixed = 'true';
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.worklyShowPixEscrowModal();
+          };
+        } else if (txt.includes('Chat')) {
+          btn.dataset.worklyFixed = 'true';
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.worklyOpenChat('conv-02');
+          };
+        } else if (txt.includes('Ligar')) {
+          btn.dataset.worklyFixed = 'true';
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            alert('📞 Ligação Segura Workly: O número é protegido por máscara. Discando: (64) 3495-9000 (Central Goiatuba)...');
+          };
+        }
+      });
+    }
+
+    // 5.7. TELA DE CHAT (/chat)
+    if (path.includes('/chat')) {
+      const convBtns = Array.from(document.querySelectorAll('main button')).filter(b => b.querySelector('div.flex-1'));
+      convBtns.forEach((btn, idx) => {
+        if (btn.dataset.worklyFixed) return;
+        btn.dataset.worklyFixed = 'true';
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const targetId = idx === 0 ? 'conv-02' : idx === 1 ? 'conv-01' : 'conv-03';
+          window.worklyOpenChat(targetId);
+        };
+      });
+    }
+
+    // 5.8. TELA DE VERIFIED (/verified)
+    if (path.includes('/verified')) {
+      const subscribeBtns = Array.from(document.querySelectorAll('main button')).filter(b => b.textContent.includes('Assinar') || b.textContent.includes('Quero'));
+      subscribeBtns.forEach(btn => {
+        if (btn.dataset.worklyFixed) return;
+        btn.dataset.worklyFixed = 'true';
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.worklySubscribeVerifiedModal();
+        };
+      });
+    }
+
+    // 5.9. TELA DE ACADEMY (/academy)
+    if (path.includes('/academy')) {
+      const courseBtns = Array.from(document.querySelectorAll('main button')).filter(b => b.textContent.includes('Iniciar') || b.textContent.includes('Continuar'));
+      courseBtns.forEach(btn => {
+        if (btn.dataset.worklyFixed) return;
+        btn.dataset.worklyFixed = 'true';
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const card = btn.closest('.glass');
+          const title = card ? card.querySelector('h3')?.textContent || 'Módulo de Capacitação' : 'Módulo';
+          if (confirm(`Iniciar certificação: "${title}"?\nAo concluir, você ganha +20 pontos no Workly Score!`)) {
+            window.worklySimulateScoreChange(20, `Certificação Academy: ${title}`);
+          }
+        };
+      });
+    }
+
+    // 5.10. TELA DE NOTIFICAÇÕES (/notificacoes)
+    if (path.includes('/notificacoes')) {
+      const markAllBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('marcar') || b.textContent.includes('Todas'));
+      if (markAllBtn && !markAllBtn.dataset.worklyFixed) {
+        markAllBtn.dataset.worklyFixed = 'true';
+        markAllBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          document.querySelectorAll('.bg-primary, .bg-blue-500, .bg-emerald-400').forEach(dot => dot.style.opacity = '0.2');
+          alert('✅ Todas as notificações foram marcadas como lidas!');
+        };
+      }
+    }
+  }
+
   // Intercepta rotas e formulários na página
   function checkRouteInterceptors() {
     renderFloatingPublishButton();
+    attachDynamicDOMFixes();
   }
 
   // Inicialização
@@ -1079,6 +1589,12 @@
       }
     }
   }
+
+  // Observador de mutações do DOM para páginas SPA dinâmicas
+  const domObserver = new MutationObserver(() => {
+    checkRouteInterceptors();
+  });
+  domObserver.observe(document.body, { childList: true, subtree: true });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

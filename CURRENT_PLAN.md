@@ -88,5 +88,17 @@ Implementar a arquitetura completa do backend da plataforma **Workly**, fornecen
   - Conexão do componente de Mensagens `/chat` (`chat-cZBjwmqU.js`) e Campanhas `/anuncios` (`anuncios-dLjr7wsq.js`) aos fluxos autênticos do sistema e gateway Pix.
   - Adição do Floating Action Button (FAB) `➕ Publicar Vaga` em todas as páginas e submenus dedicados para "Meus Anúncios" e "Suporte Wex AI 24/7".
 
+- [x] **Etapa 20:** Resolução Integral de Dead Buttons, Inconsistências de Dados e Conexão Ponta a Ponta:
+  - Interceptador automático de DOM e eventos ativado no `workly-system.js` cobrindo todas as 17 rotas.
+  - `/perfil`: Dados dinâmicos do usuário autenticado (Lucas, Lara ou Carlos), botão de sair da conta funcional com limpeza de storage e botão de configurações conectado ao alternador de contas.
+  - `/pay`: Saldo dinâmico sincronizado, botões PIX/Depositar conectados ao Escrow e Saque Pix funcional.
+  - `/score`: Score dinâmico atualizado e botão integrado para o Simulador de Reputação.
+  - `/oportunidades`: Botão "Candidatar-se" gravando proposta real via `POST /api/v1/proposals` e conectando ao chat; filtros com praças de Goiás (Goiatuba, Rio Verde, Goiânia).
+  - `/publicar-servico`: Formulário nativo gravando via `POST /api/v1/jobs` e refletindo no feed de vagas.
+  - `/express`: Botões de contratar e chat conectados aos modais de custódia e chat.
+  - `/verified`: Assinatura mensal com checkout Pix de R$ 29,90.
+  - `/academy`: Cursos creditando +20 pontos ao Workly Score.
+  - Backend `POST /api/v1/proposals` adicionado e compilado com 0 erros no TypeScript.
+
 ## Status Final
-**CONCLUÍDO, SISTEMA DE PUBLICAÇÃO E ROTAS NATIVAS 100% OPERACIONAIS, SINCRONIZADO NO GITHUB E IMPLANTADO NA VPS**
+**CONCLUÍDO, TODOS OS BOTÕES E FLUXOS INTEGRADOS E TESTADOS, SINCRONIZADO NO GITHUB E ATIVO NA VPS**

@@ -44,6 +44,22 @@ class SubmenuController {
         ];
         return res.json({ total: proposals.length, proposals });
     }
+    // Criar Nova Proposta / Candidatura
+    static createProposal(req, res) {
+        const { jobId, jobTitle, valor, contratanteNome = 'Empresa Contratante', mensagem } = req.body;
+        const newProposal = {
+            id: 'prop-' + Date.now().toString().slice(-6),
+            jobId: jobId || 'job-101',
+            jobTitle: jobTitle || 'Proposta de Serviço',
+            contratanteNome,
+            valor: Number(valor) || 350.00,
+            status: 'aguardando_aprovacao',
+            dataEnvio: new Date().toISOString().split('T')[0],
+            escrowGarantido: true,
+            progressoPercentual: 0
+        };
+        return res.status(201).json({ success: true, message: 'Candidatura e proposta enviadas com sucesso!', proposal: newProposal });
+    }
     // 2. Extrato Detalhado da Carteira Workly Pay
     static getWalletStatement(req, res) {
         const transactions = [

@@ -9,14 +9,18 @@ const chatController_1 = require("../controllers/chatController");
 const submenuController_1 = require("../controllers/submenuController");
 const auth_1 = require("../middlewares/auth");
 const router = (0, express_1.Router)();
+// Healthcheck
+router.get('/health', (req, res) => {
+    res.json({ status: 'ONLINE', service: 'Workly API v1', timestamp: new Date().toISOString() });
+});
 // 1. ROTAS DE AUTENTICAÇÃO
 router.post('/auth/register', authController_1.AuthController.register);
 router.post('/auth/login', authController_1.AuthController.login);
 router.get('/auth/me', auth_1.authMiddleware, authController_1.AuthController.me);
 // 2. ROTAS DE VAGAS & EXPRESS
 router.get('/jobs', jobController_1.JobController.listJobs);
-router.post('/jobs', auth_1.authMiddleware, jobController_1.JobController.createJob);
-router.post('/jobs/express', auth_1.authMiddleware, jobController_1.JobController.createExpressJob);
+router.post('/jobs', auth_1.optionalAuthMiddleware, jobController_1.JobController.createJob);
+router.post('/jobs/express', auth_1.optionalAuthMiddleware, jobController_1.JobController.createExpressJob);
 // 3. ROTAS DE CARTEIRA & PIX & CUSTÓDIA
 router.get('/wallet', auth_1.authMiddleware, walletController_1.WalletController.getWallet);
 router.post('/wallet/deposit-pix', auth_1.authMiddleware, walletController_1.WalletController.gerarDepositoPix);

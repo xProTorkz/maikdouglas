@@ -537,7 +537,7 @@
           `).join('')}
         </div>
       `;
-    } else if (type === 'publicar') {
+    } else if (type === 'publicar' || type === 'publicar_vaga') {
       // Formulário real de publicação de serviço
       contentHtml = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -557,17 +557,18 @@
             <div>
               <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px;">Categoria:</label>
               <select id="pub-categoria" style="width: 100%; box-sizing: border-box; background: #0e1934; border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px;">
-                <option value="Tecnologia">Tecnologia & TI</option>
-                <option value="Eletricista">Eletricista</option>
-                <option value="Design">Design & Criativo</option>
                 <option value="Construção">Construção Civil</option>
+                <option value="Eletricista">Eletricista</option>
+                <option value="Tecnologia">Tecnologia & TI</option>
+                <option value="Design">Design & Criativo</option>
                 <option value="Limpeza">Limpeza & Manutenção</option>
+                <option value="Marketing">Marketing</option>
               </select>
             </div>
           </div>
           <div>
             <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px;">Descrição Completa:</label>
-            <textarea id="pub-descricao" rows="3" required placeholder="Descreva os requisitos e prazo..." style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px;"></textarea>
+            <textarea id="pub-descricao" rows="3" required placeholder="Descreva os requisitos, local e prazo..." style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px;"></textarea>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div>
@@ -579,9 +580,72 @@
               <input type="text" id="pub-cidade" required placeholder="São Paulo/SP" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px;">
             </div>
           </div>
-          <button type="submit" style="margin-top: 10px; width: 100%; padding: 14px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 14px; cursor: pointer;">
+          <button type="submit" style="margin-top: 10px; width: 100%; padding: 14px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 14px; cursor: pointer; font-size: 14px; box-shadow: 0 4px 15px rgba(15,111,255,0.4);">
             🚀 Publicar Vaga no Feed Oficial
           </button>
+        </form>
+      `;
+    } else if (type === 'meus_anuncios') {
+      const user = getCurrentUser();
+      const res = await fetch(`${API_BASE}/jobs`);
+      const data = await res.json();
+      const meus = (data.jobs || []).filter(j => j.contratanteId === user.id || j.contratanteNome === user.nome);
+      contentHtml = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 style="margin: 0; font-size: 20px; font-weight: 800;">📢 Meus Anúncios & Vagas Publicadas</h2>
+          <button onclick="document.getElementById('workly-submenu-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <button onclick="window.worklyOpenSubmenu('publicar_vaga')" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 14px; cursor: pointer;">
+            ➕ Criar Nova Vaga / Anúncio
+          </button>
+        </div>
+        ${meus.length === 0 ? `
+          <div style="text-align: center; padding: 40px 20px; color: #94a3b8;">
+            <div style="font-size: 40px; margin-bottom: 10px;">📭</div>
+            <p style="font-size: 14px; margin: 0 0 10px;">Você ainda não publicou nenhuma vaga como <strong>${user.nome}</strong>.</p>
+            <p style="font-size: 12px;">Clique no botão acima para criar sua primeira oportunidade!</p>
+          </div>
+        ` : `
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            ${meus.map(j => `
+              <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <div>
+                    <span style="font-size: 10px; background: rgba(16,185,129,0.2); color: #34d399; padding: 2px 8px; border-radius: 9999px; font-weight: 700;">🟢 ATIVO NO FEED</span>
+                    <h4 style="margin: 6px 0 2px; font-size: 15px; color: #fff;">${j.titulo}</h4>
+                    <span style="font-size: 11px; color: #94a3b8;">${j.cidade}/${j.estado} · Categoria: ${j.categoria}</span>
+                  </div>
+                  <div style="font-size: 16px; font-weight: 800; color: #60a5fa;">R$ ${Number(j.orcamento).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                </div>
+                <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.06); pt: 8px;">
+                  <span style="font-size: 11px; color: #cbd5e1;">Visualizações: <strong>248</strong> · Propostas: <strong>4</strong></span>
+                  <button onclick="window.worklyContactJob('${j.id}')" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 12px; border-radius: 10px; font-size: 11px; cursor: pointer;">
+                    Ver Card
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      `;
+    } else if (type === 'wex_ai') {
+      contentHtml = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="/__l5e/assets-v1/8ecfe286-e5fa-4906-99b5-be4b72dfe1e7/wex.png" alt="Wex" style="width: 32px; height: 32px;">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 800;">Suporte Wex AI 24/7</h2>
+          </div>
+          <button onclick="document.getElementById('workly-submenu-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        <div id="wex-chat-history" style="height: 260px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;">
+          <div style="background: rgba(15,111,255,0.2); padding: 10px 14px; border-radius: 14px; font-size: 13px; color: #e2e8f0; align-self: flex-start; max-width: 85%;">
+            🦁 Olá! Sou o Wex, assistente oficial do Workly. Como posso te ajudar com vagas, custódia Pix ou seu Score hoje?
+          </div>
+        </div>
+        <form onsubmit="window.worklySendWexQuestion(event)" style="display: flex; gap: 8px;">
+          <input type="text" id="wex-input" required placeholder="Digite sua dúvida..." style="flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px;">
+          <button type="submit" style="background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; padding: 10px 18px; border-radius: 12px; font-weight: 700; cursor: pointer;">Enviar</button>
         </form>
       `;
     } else if (type === 'propostas') {
@@ -825,9 +889,137 @@
     document.body.appendChild(overlay);
   };
 
+  // Suporte Wex AI
+  window.worklySendWexQuestion = async function (e) {
+    e.preventDefault();
+    const input = document.getElementById('wex-input');
+    const question = input.value.trim();
+    if (!question) return;
+
+    const history = document.getElementById('wex-chat-history');
+    history.innerHTML += `
+      <div style="background: rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 14px; font-size: 13px; color: #fff; align-self: flex-end; max-width: 85%;">
+        ${question}
+      </div>
+    `;
+    input.value = '';
+    history.scrollTop = history.scrollHeight;
+
+    try {
+      const res = await fetch(`${API_BASE}/support/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mensagem: question })
+      });
+      const data = await res.json();
+      history.innerHTML += `
+        <div style="background: rgba(15,111,255,0.2); padding: 10px 14px; border-radius: 14px; font-size: 13px; color: #e2e8f0; align-self: flex-start; max-width: 85%;">
+          🦁 ${data.resposta || 'Posso te ajudar com contratações, liberação de pagamento e planos Pro!'}
+        </div>
+      `;
+      history.scrollTop = history.scrollHeight;
+    } catch (err) {
+      history.innerHTML += `
+        <div style="background: rgba(239,68,68,0.2); padding: 10px 14px; border-radius: 14px; font-size: 13px; color: #f87171; align-self: flex-start;">
+          Erro ao consultar o suporte. Tente novamente.
+        </div>
+      `;
+    }
+  };
+
+  // Injeta Botão Flutuante Universal "Publicar Vaga"
+  function renderFloatingPublishButton() {
+    if (document.getElementById('workly-fab-publish')) return;
+    if (window.location.pathname.includes('/login')) return;
+
+    const fab = document.createElement('div');
+    fab.id = 'workly-fab-publish';
+    fab.setAttribute('title', 'Publicar Vaga ou Serviço');
+    fab.style.cssText = `
+      position: fixed;
+      bottom: 78px;
+      right: 20px;
+      z-index: 99999;
+      background: linear-gradient(135deg, #0F6FFF 0%, #8A3FFC 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 9999px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px -4px rgba(15, 111, 255, 0.5), 0 0 15px rgba(138, 63, 252, 0.4);
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: transform 0.2s, box-shadow 0.2s;
+    `;
+    fab.innerHTML = `
+      <span style="font-size: 16px;">➕</span>
+      <span>Publicar Vaga</span>
+    `;
+    fab.onmouseover = () => { fab.style.transform = 'translateY(-2px) scale(1.02)'; };
+    fab.onmouseout = () => { fab.style.transform = 'none'; };
+    fab.onclick = () => { window.worklyOpenSubmenu('publicar_vaga'); };
+
+    document.body.appendChild(fab);
+  }
+
+  // Intercepta rotas e formulários na página
+  function checkRouteInterceptors() {
+    renderFloatingPublishButton();
+
+    // Se estiver em /publicar-servico, garante que o botão do DOM funcione
+    if (window.location.pathname.includes('/publicar-servico')) {
+      const btn = Array.from(document.querySelectorAll('button')).find(b => (b.innerText || '').includes('Publicar agora'));
+      if (btn && !btn.getAttribute('data-workly-bound')) {
+        btn.setAttribute('data-workly-bound', 'true');
+        btn.onclick = async (e) => {
+          e.preventDefault();
+          const inputs = document.querySelectorAll('input, textarea, select');
+          const titleInput = Array.from(inputs).find(i => i.placeholder?.includes('título') || i.placeholder?.includes('serviço'));
+          const priceInput = Array.from(inputs).find(i => i.placeholder?.includes('500') || i.type === 'number');
+          const descInput = document.querySelector('textarea');
+          const catSelect = document.querySelector('select');
+
+          const titulo = titleInput?.value || 'Serviço Profissional';
+          const orcamento = priceInput?.value || '250';
+          const categoria = catSelect?.value || 'Construção';
+          const descricao = descInput?.value || 'Solicitação de serviço via plataforma';
+
+          const user = getCurrentUser();
+          try {
+            const res = await fetch(`${API_BASE}/jobs`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                titulo,
+                orcamento: parseFloat(orcamento) || 250,
+                categoria,
+                descricao,
+                telefone: user.telefone || '11999887766',
+                cidade: 'São Paulo',
+                estado: 'SP',
+                contratanteId: user.id,
+                contratanteNome: user.nome
+              })
+            });
+            if (res.ok) {
+              alert('🎉 Vaga publicada com sucesso no feed!');
+              window.location.href = '/oportunidades';
+            }
+          } catch (err) {
+            alert('Erro ao publicar: ' + err.message);
+          }
+        };
+      }
+    }
+  }
+
   // Inicialização
   function init() {
     updateInterfaceUser();
+    checkRouteInterceptors();
 
     // Na página de login, injeta atalhos rápidos
     if (window.location.pathname.includes('/login')) {
@@ -853,4 +1045,7 @@
   } else {
     init();
   }
+
+  window.addEventListener('popstate', checkRouteInterceptors);
+  setInterval(checkRouteInterceptors, 1500);
 })();

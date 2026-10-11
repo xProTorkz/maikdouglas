@@ -5,9 +5,14 @@ import { WalletController } from '../controllers/walletController';
 import { ScoreController } from '../controllers/scoreController';
 import { ChatController } from '../controllers/chatController';
 import { SubmenuController } from '../controllers/submenuController';
-import { authMiddleware } from '../middlewares/auth';
+import { authMiddleware, optionalAuthMiddleware } from '../middlewares/auth';
 
 const router = Router();
+
+// Healthcheck
+router.get('/health', (req, res) => {
+  res.json({ status: 'ONLINE', service: 'Workly API v1', timestamp: new Date().toISOString() });
+});
 
 // 1. ROTAS DE AUTENTICAÇÃO
 router.post('/auth/register', AuthController.register);
@@ -16,8 +21,8 @@ router.get('/auth/me', authMiddleware, AuthController.me);
 
 // 2. ROTAS DE VAGAS & EXPRESS
 router.get('/jobs', JobController.listJobs);
-router.post('/jobs', authMiddleware, JobController.createJob);
-router.post('/jobs/express', authMiddleware, JobController.createExpressJob);
+router.post('/jobs', optionalAuthMiddleware, JobController.createJob);
+router.post('/jobs/express', optionalAuthMiddleware, JobController.createExpressJob);
 
 // 3. ROTAS DE CARTEIRA & PIX & CUSTÓDIA
 router.get('/wallet', authMiddleware, WalletController.getWallet);

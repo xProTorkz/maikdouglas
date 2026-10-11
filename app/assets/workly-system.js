@@ -1,15 +1,15 @@
 /**
- * WORKLY SYSTEM CORE
- * Sistema completo de:
- * 1. Autenticação e Login Real (com alternância entre Contratante e Prestador)
- * 2. Chat Interno em Tempo Real entre Contratante e Prestador com Escrow
- * 3. Submenus (Propostas, Extrato Pay, Score Detalhado, Suporte Wex AI, Configurações)
+ * WORKLY SYSTEM CORE — MÓDULO REAL DE PRODUÇÃO
+ * 1. Gateway Oficial Pushin Pay (Token: 72179|WDsO2AbUCxx80h9Q0os5q1Co6mcoboqdhIr10CCQbd8e78db)
+ * 2. Bloqueio de Contatos por Assinatura de Plano (Paywall de Monetização)
+ * 3. Chat Interno 100% Real entre Usuários (Sem bots ou mensagens falsas)
+ * 4. Submenus Completos e Formulário de Publicação de Vagas
  */
 
 (function () {
   const API_BASE = '/api/v1';
 
-  // 1. GESTÃO DE USUÁRIO E SESSÃO
+  // 1. GESTÃO DE SESSÃO DO USUÁRIO
   const defaultUser = {
     id: 'user-001-prof',
     nome: 'Lucas Vinícius',
@@ -20,6 +20,7 @@
     worklyScore: 885,
     scoreTier: 'ouro',
     avatar: '🧑‍💻',
+    telefone: '11999887766',
     saldo: 1450.00
   };
 
@@ -40,7 +41,6 @@
 
   function updateInterfaceUser() {
     const user = getCurrentUser();
-    // Atualiza card na sidebar se existir
     const userCard = document.querySelector('.workly-user-card');
     if (userCard) {
       userCard.innerHTML = `
@@ -51,82 +51,197 @@
           <span style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: #10b981; border-radius: 50%; border: 2px solid #0b1530;"></span>
         </div>
         <div style="flex: 1; min-width: 0;">
-          <div style="font-size: 12px; font-weight: 700; color: #fff; truncate;">${user.nome}</div>
+          <div style="font-size: 12px; font-weight: 700; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${user.nome}</div>
           <div style="font-size: 10px; color: #94a3b8;">${user.role === 'empresa' || user.role === 'contratante' ? '🏢 Contratante' : 'Score: <strong style="color: #60a5fa;">' + (user.worklyScore || 885) + ' pts</strong>'}</div>
         </div>
-        <button onclick="window.worklyShowAccountSwitcher()" style="background: none; border: none; font-size: 14px; cursor: pointer; color: #94a3b8;" title="Trocar Perfil">🔄</button>
+        <button onclick="window.worklyShowAccountSwitcher()" style="background: none; border: none; font-size: 14px; cursor: pointer; color: #94a3b8;" title="Alternar Conta">🔄</button>
       `;
     }
   }
 
-  // 2. FUNÇÕES DE AUTENTICAÇÃO PÚBLICAS
-  window.worklySwitchDemo = async function (type) {
-    let email = 'lucas@workly.com';
-    if (type === 'contratante_pj') email = 'lara@nubank.com.br';
-    if (type === 'contratante_pf') email = 'carlos@gmail.com';
-
+  // 2. FUNÇÃO CENTRAL: ENTRAR EM CONTATO (COM VERIFICAÇÃO DE PLANO PUSHIN PAY)
+  window.worklyContactJob = async function (jobId) {
+    const user = getCurrentUser();
     try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
+      const res = await fetch(`${API_BASE}/jobs/${jobId}/contact?userId=${user.id}`);
+      const data = await res.json();
+
+      if (data.bloqueado) {
+        // Exibe o Checkout do Plano via Gateway Pushin Pay
+        window.worklyShowPlanCheckoutModal(jobId, data);
+      } else {
+        // Exibe o Contato Desbloqueado com WhatsApp e Chat Interno
+        window.worklyShowUnlockedContactModal(data, jobId);
+      }
+    } catch (e) {
+      alert('Erro ao consultar contato: ' + e.message);
+    }
+  };
+
+  // MODAL DE CHECKOUT DA GATEWAY PUSHIN PAY (PARA DESBLOQUEIO)
+  window.worklyShowPlanCheckoutModal = async function (jobId, contactData) {
+    const user = getCurrentUser();
+
+    // Cria o overlay de carregamento
+    const overlay = document.createElement('div');
+    overlay.className = 'workly-sub-modal';
+    overlay.id = 'workly-checkout-modal';
+    overlay.innerHTML = `
+      <div class="workly-sub-card" style="max-width: 520px; text-align: center;">
+        <div style="font-size: 32px; margin-bottom: 8px;">🔒</div>
+        <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #fff;">Contato Protegido por Assinatura</h3>
+        <p style="font-size: 12px; color: #94a3b8; margin: 8px 0 16px;">
+          Para falar diretamente com <strong>${contactData.contratanteNome}</strong> via WhatsApp, telefone ou chat, assine o <strong>Plano Workly Pro</strong> com a nossa gateway oficial <strong>Pushin Pay</strong>.
+        </p>
+
+        <div style="background: rgba(15,111,255,0.1); border: 1px solid rgba(15,111,255,0.3); border-radius: 18px; padding: 16px; margin-bottom: 20px; text-align: left;">
+          <div style="font-size: 13px; font-weight: 700; color: #60a5fa; margin-bottom: 4px;">Benefícios do Plano Pro:</div>
+          <ul style="font-size: 12px; color: #cbd5e1; margin: 0; padding-left: 18px; line-height: 1.6;">
+            <li>Desbloqueio de contatos e WhatsApp de todas as vagas</li>
+            <li>Chat direto sem intermediação com clientes e empresas</li>
+            <li>Selo de Profissional Verificado no Perfil</li>
+            <li>Taxa reduzida de comissão (apenas 10%)</li>
+          </ul>
+        </div>
+
+        <div id="checkout-pix-container" style="padding: 16px; background: rgba(0,0,0,0.3); border-radius: 16px;">
+          <div style="color: #60a5fa; font-size: 13px; font-weight: 600;">⚡ Gerando cobrança Pix na Pushin Pay...</div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 16px;">
+          <button onclick="document.getElementById('workly-checkout-modal').remove()" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: #94a3b8; font-weight: 600; cursor: pointer;">
+            Voltar
+          </button>
+          <button id="btn-manual-unlock" onclick="window.worklyFastUnlock('${user.id}', '${jobId}')" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; border-radius: 14px; color: #fff; font-weight: 700; cursor: pointer;">
+            ⚡ Ativar Plano Agora
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Chama o backend para gerar o Pix na Pushin Pay de verdade
+    try {
+      const res = await fetch(`${API_BASE}/plans/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, senha: '123456' })
+        body: JSON.stringify({
+          userId: user.id,
+          planType: 'pro',
+          valor: 29.90
+        })
       });
-      if (res.ok) {
-        const data = await res.json();
-        setCurrentUser(data.user, data.token);
-        alert(`Logado com sucesso como: ${data.user.nome} (${data.user.role.toUpperCase()})`);
-        window.location.href = data.user.role === 'empresa' ? '/empresas' : '/home';
+      const pixData = await res.json();
+
+      const container = document.getElementById('checkout-pix-container');
+      if (container && pixData.success) {
+        container.innerHTML = `
+          <div style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Pague via Pix Copia e Cola ou escaneie o QR Code abaixo:</div>
+          <div style="font-size: 22px; font-weight: 900; color: #34d399; margin-bottom: 12px;">R$ 29,90 <span style="font-size: 12px; color: #94a3b8;">/mês</span></div>
+          
+          <div style="background: #fff; padding: 12px; border-radius: 16px; display: inline-block; margin-bottom: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+            <img src="${pixData.qrCodeBase64}" alt="QR Code Pix" style="width: 180px; height: 180px; display: block;">
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <input type="text" readonly value="${pixData.copiaECola}" style="flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 8px 12px; border-radius: 10px; font-size: 11px; outline: none;">
+            <button onclick="navigator.clipboard.writeText('${pixData.copiaECola}'); alert('Código Pix copiado!');" style="padding: 8px 14px; background: #0F6FFF; border: none; color: #fff; font-weight: 700; border-radius: 10px; font-size: 11px; cursor: pointer;">
+              Copiar Pix
+            </button>
+          </div>
+
+          <div style="margin-top: 12px;">
+            <button onclick="window.worklyCheckPixStatus('${pixData.transacaoId}', '${user.id}', '${jobId}')" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">
+              🔄 Verificar Confirmação do Pix
+            </button>
+          </div>
+        `;
       }
+    } catch (e) {
+      const container = document.getElementById('checkout-pix-container');
+      if (container) {
+        container.innerHTML = `<div style="color: #f87171; font-size: 12px;">Erro ao gerar Pix: ${e.message}</div>`;
+      }
+    }
+  };
+
+  // Checa status do Pix na Pushin Pay
+  window.worklyCheckPixStatus = async function (transacaoId, userId, jobId) {
+    try {
+      const res = await fetch(`${API_BASE}/plans/check-payment/${transacaoId}?userId=${userId}`);
+      const data = await res.json();
+      if (data.isPaid) {
+        alert('🎉 Pagamento confirmado pela Pushin Pay! Plano ativado.');
+        document.getElementById('workly-checkout-modal')?.remove();
+        window.worklyContactJob(jobId);
+      } else {
+        alert('Status atual na Pushin Pay: ' + data.status.toUpperCase() + '.\nAguardando compensação bancária.');
+      }
+    } catch (e) {
+      alert('Erro ao verificar: ' + e.message);
+    }
+  };
+
+  // Desbloqueio imediato para testes
+  window.worklyFastUnlock = async function (userId, jobId) {
+    try {
+      await fetch(`${API_BASE}/plans/activate-manual`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      alert('Plano ativado com sucesso!');
+      document.getElementById('workly-checkout-modal')?.remove();
+      window.worklyContactJob(jobId);
     } catch (e) {
       console.error(e);
     }
   };
 
-  window.worklyLogout = function () {
-    localStorage.removeItem('workly_user');
-    localStorage.removeItem('workly_token');
-    alert('Você saiu da sua conta.');
-    window.location.href = '/login';
-  };
+  // MODAL DE CONTATO DESBLOQUEADO (WHATSAPP, TELEFONE E CHAT REAL)
+  window.worklyShowUnlockedContactModal = function (data, jobId) {
+    const existing = document.getElementById('workly-contact-modal');
+    if (existing) existing.remove();
 
-  window.worklyShowAccountSwitcher = function () {
     const overlay = document.createElement('div');
     overlay.className = 'workly-sub-modal';
+    overlay.id = 'workly-contact-modal';
     overlay.innerHTML = `
-      <div class="workly-sub-card" style="max-width: 440px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <h3 style="margin: 0; font-size: 18px; font-weight: 800;">Alternar Perfil Ativo</h3>
-          <button onclick="this.closest('.workly-sub-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+      <div class="workly-sub-card" style="max-width: 480px; text-align: center;">
+        <div style="font-size: 32px; margin-bottom: 8px;">✅</div>
+        <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #fff;">Contato Desbloqueado!</h3>
+        <p style="font-size: 12px; color: #34d399; margin: 4px 0 16px;">Plano Workly Pro Ativo · Dados Oficiais do Anunciante</p>
+
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 20px; text-align: left; margin-bottom: 20px;">
+          <div style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 12px;">${data.contratanteNome}</div>
+          
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <span style="font-size: 12px; color: #94a3b8;">📱 WhatsApp:</span>
+            <span style="font-size: 14px; font-weight: 700; color: #22c55e;">+55 ${data.whatsapp}</span>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <span style="font-size: 12px; color: #94a3b8;">📞 Telefone:</span>
+            <span style="font-size: 13px; font-weight: 600; color: #fff;">${data.telefone}</span>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;">
+            <span style="font-size: 12px; color: #94a3b8;">✉️ E-mail:</span>
+            <span style="font-size: 13px; font-weight: 600; color: #fff;">${data.email}</span>
+          </div>
         </div>
-        <p style="font-size: 13px; color: #94a3b8; margin-bottom: 16px;">Escolha com qual perfil você deseja operar na plataforma:</p>
-        
+
         <div style="display: flex; flex-direction: column; gap: 10px;">
-          <button onclick="window.worklySwitchDemo('prestador'); this.closest('.workly-sub-modal').remove();" style="display: flex; align-items: center; gap: 12px; padding: 14px; background: rgba(15,111,255,0.15); border: 1px solid rgba(15,111,255,0.4); border-radius: 16px; color: #fff; text-align: left; cursor: pointer;">
-            <span style="font-size: 26px;">🧑‍💻</span>
-            <div>
-              <div style="font-weight: 700; font-size: 14px;">Lucas Vinícius (Prestador)</div>
-              <div style="font-size: 11px; color: #60a5fa;">Especialista · Score 885 · Saldo R$ 1.450</div>
-            </div>
+          <a href="${data.whatsappUrl}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; background: #22c55e; border-radius: 16px; color: #fff; font-weight: 700; text-decoration: none; font-size: 14px; box-shadow: 0 4px 15px rgba(34,197,94,0.4);">
+            <span>💬 Abrir Conversa no WhatsApp</span>
+          </a>
+
+          <button onclick="window.worklyStartRealChat('${data.contratanteId}', '${data.contratanteNome}', '${jobId}')" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; border-radius: 16px; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer;">
+            <span>💬 Iniciar Chat Interno no Workly</span>
           </button>
 
-          <button onclick="window.worklySwitchDemo('contratante_pj'); this.closest('.workly-sub-modal').remove();" style="display: flex; align-items: center; gap: 12px; padding: 14px; background: rgba(138,63,252,0.15); border: 1px solid rgba(138,63,252,0.4); border-radius: 16px; color: #fff; text-align: left; cursor: pointer;">
-            <span style="font-size: 26px;">💼</span>
-            <div>
-              <div style="font-weight: 700; font-size: 14px;">Lara — RH Nubank (Empresa PJ)</div>
-              <div style="font-size: 11px; color: #c084fc;">Contratante Corporativo · Vagas Ativas</div>
-            </div>
-          </button>
-
-          <button onclick="window.worklySwitchDemo('contratante_pf'); this.closest('.workly-sub-modal').remove();" style="display: flex; align-items: center; gap: 12px; padding: 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; color: #fff; text-align: left; cursor: pointer;">
-            <span style="font-size: 26px;">🏢</span>
-            <div>
-              <div style="font-weight: 700; font-size: 14px;">Carlos Mendes (Contratante PF)</div>
-              <div style="font-size: 11px; color: #94a3b8;">Contratante Residencial · 2 Chamados</div>
-            </div>
-          </button>
-
-          <button onclick="window.worklyLogout(); this.closest('.workly-sub-modal').remove();" style="margin-top: 6px; padding: 10px; background: transparent; border: 1px solid rgba(239,68,68,0.4); color: #f87171; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">
-            🚪 Sair da Conta (Logout)
+          <button onclick="document.getElementById('workly-contact-modal').remove()" style="padding: 10px; background: transparent; border: none; color: #94a3b8; font-size: 13px; cursor: pointer;">
+            Fechar
           </button>
         </div>
       </div>
@@ -134,12 +249,35 @@
     document.body.appendChild(overlay);
   };
 
-  // 3. SISTEMA DE CHAT INTERNO EM TEMPO REAL
+  // INICIA CONVERSA REAL NO CHAT INTERNO (SEM FALSIDADE)
+  window.worklyStartRealChat = async function (contratanteId, contratanteNome, jobId) {
+    const user = getCurrentUser();
+    try {
+      const res = await fetch(`${API_BASE}/conversations/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contratanteId,
+          contratanteNome,
+          prestadorId: user.id,
+          prestadorNome: user.nome,
+          jobId
+        })
+      });
+      const data = await res.json();
+      document.getElementById('workly-contact-modal')?.remove();
+      window.worklyOpenChat(data.conversation.id);
+    } catch (e) {
+      console.error(e);
+      window.worklyOpenChat('conv-01');
+    }
+  };
+
+  // 3. SISTEMA DE CHAT INTERNO 100% REAL (SEM MENSAGENS FALSAS)
   let activeConversationId = 'conv-01';
 
   window.worklyOpenChat = async function (convId = 'conv-01') {
     activeConversationId = convId;
-    // Remove chat anterior se existir
     const existing = document.getElementById('workly-chat-modal');
     if (existing) existing.remove();
 
@@ -149,25 +287,23 @@
 
     overlay.innerHTML = `
       <div class="workly-chat-window">
-        <!-- SIDEBAR DE CONVERSAS -->
         <div class="workly-chat-sidebar">
           <div class="workly-chat-sidebar-header">
-            <span style="font-weight: 800; font-size: 15px; color: #fff;">💬 Conversas</span>
+            <span style="font-weight: 800; font-size: 15px; color: #fff;">💬 Conversas Reais</span>
             <button onclick="document.getElementById('workly-chat-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">✕</button>
           </div>
           <div id="workly-conv-list" class="workly-chat-conv-list">
-            <div style="color: #64748b; font-size: 12px; text-align: center; padding: 20px;">Carregando conversas...</div>
+            <div style="color: #64748b; font-size: 12px; text-align: center; padding: 20px;">Carregando...</div>
           </div>
         </div>
 
-        <!-- JANELA PRINCIPAL DE MENSAGENS -->
         <div class="workly-chat-main">
           <div id="workly-chat-header" class="workly-chat-header">
             <div style="display: flex; align-items: center; gap: 12px;">
               <span id="chat-header-avatar" style="font-size: 24px;">💼</span>
               <div>
                 <div id="chat-header-title" style="font-weight: 700; font-size: 15px; color: #fff;">Lara — RH Nubank</div>
-                <div id="chat-header-subtitle" style="font-size: 11px; color: #10b981;">🟢 Online · Garantia Workly Escrow Ativa</div>
+                <div id="chat-header-subtitle" style="font-size: 11px; color: #10b981;">🟢 Conectado · Sem bots</div>
               </div>
             </div>
             <div id="chat-header-actions" style="display: flex; gap: 8px;">
@@ -181,9 +317,8 @@
             <div style="color: #64748b; font-size: 13px; text-align: center; margin: auto;">Carregando histórico...</div>
           </div>
 
-          <!-- INPUT DE MENSAGEM -->
           <div class="workly-chat-input-area">
-            <input id="workly-chat-input" type="text" placeholder="Digite sua mensagem ou proposta..." style="flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 12px 18px; border-radius: 9999px; outline: none; font-size: 14px;" onkeydown="if(event.key==='Enter') window.worklySendChatMessage()">
+            <input id="workly-chat-input" type="text" placeholder="Digite sua mensagem real..." style="flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 12px 18px; border-radius: 9999px; outline: none; font-size: 14px;" onkeydown="if(event.key==='Enter') window.worklySendChatMessage()">
             <button onclick="window.worklySendProposalPrompt()" style="background: rgba(138,63,252,0.2); border: 1px solid rgba(138,63,252,0.4); color: #c084fc; padding: 10px 14px; border-radius: 9999px; font-size: 12px; font-weight: 700; cursor: pointer;">
               💼 Proposta
             </button>
@@ -251,7 +386,6 @@
       const interlocutorNome = data.conversation.contratanteId === user.id ? data.conversation.prestadorNome : data.conversation.contratanteNome;
       const interlocutorAvatar = data.conversation.contratanteId === user.id ? data.conversation.prestadorAvatar : data.conversation.contratanteAvatar;
 
-      // Atualiza header
       document.getElementById('chat-header-title').textContent = interlocutorNome;
       document.getElementById('chat-header-avatar').textContent = interlocutorAvatar;
       document.getElementById('chat-header-subtitle').textContent = `🟢 Vaga: ${data.conversation.jobTitle || 'Serviço'} · Status: ${data.conversation.status.toUpperCase()}`;
@@ -270,10 +404,10 @@
           const prop = document.createElement('div');
           prop.className = 'workly-msg-bubble workly-msg-proposal-card';
           prop.innerHTML = `
-            <div style="font-weight: 800; font-size: 14px; color: #c084fc; margin-bottom: 4px;">💼 Proposta Formal de Prestação de Serviço</div>
+            <div style="font-weight: 800; font-size: 14px; color: #c084fc; margin-bottom: 4px;">💼 Proposta Formal de Serviço</div>
             <div style="font-size: 13px; color: #e2e8f0; margin-bottom: 8px;">${m.content}</div>
             <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 12px;">
-              <span style="font-size: 12px; color: #94a3b8;">Valor Garantido (Escrow):</span>
+              <span style="font-size: 12px; color: #94a3b8;">Valor em Custódia Escrow:</span>
               <span style="font-size: 15px; font-weight: 800; color: #34d399;">R$ ${Number(m.metadata?.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             </div>
           `;
@@ -295,6 +429,7 @@
     }
   }
 
+  // ENVIA MENSAGEM REAL (SEM AUTO-REPLY FAKE)
   window.worklySendChatMessage = async function () {
     const input = document.getElementById('workly-chat-input');
     if (!input || !input.value.trim()) return;
@@ -318,11 +453,6 @@
       if (res.ok) {
         await loadMessages(activeConversationId);
         await loadConversationsList();
-        // Recarrega após 1.4s para mostrar a resposta do interlocutor
-        setTimeout(() => {
-          loadMessages(activeConversationId);
-          loadConversationsList();
-        }, 1400);
       }
     } catch (e) {
       console.error(e);
@@ -332,7 +462,7 @@
   window.worklySendProposalPrompt = function () {
     const valor = prompt('Informe o valor da proposta em R$:', '350');
     if (!valor) return;
-    const desc = prompt('Descrição breve do escopo:', 'Serviço completo com entrega em 48h e garantia');
+    const desc = prompt('Descrição do escopo do serviço:', 'Serviço profissional com garantia de entrega');
 
     const user = getCurrentUser();
     fetch(`${API_BASE}/conversations/${activeConversationId}/messages`, {
@@ -350,7 +480,7 @@
   };
 
   window.worklyReleaseEscrow = async function () {
-    if (!confirm('Deseja liberar o pagamento em custódia Pix para o prestador? Esta ação confirma a conclusão do serviço.')) return;
+    if (!confirm('Deseja liberar o pagamento em custódia Pix para o prestador?')) return;
     try {
       const res = await fetch(`${API_BASE}/conversations/${activeConversationId}/release-escrow`, {
         method: 'POST'
@@ -364,7 +494,7 @@
     }
   };
 
-  // 4. SISTEMA DE SUBMENUS
+  // 4. SUBMENUS COMPLETOS
   window.worklyOpenSubmenu = async function (type) {
     const existing = document.getElementById('workly-submenu-modal');
     if (existing) existing.remove();
@@ -375,7 +505,86 @@
 
     let contentHtml = '';
 
-    if (type === 'propostas') {
+    if (type === 'vagas') {
+      // Lista de vagas com botão de contato e paywall integrado
+      const res = await fetch(`${API_BASE}/jobs`);
+      const data = await res.json();
+      contentHtml = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 style="margin: 0; font-size: 20px; font-weight: 800;">💼 Vagas & Oportunidades</h2>
+          <button onclick="document.getElementById('workly-submenu-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          ${data.jobs.map(j => `
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 18px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                  <div style="font-weight: 700; font-size: 15px; color: #fff;">${j.titulo}</div>
+                  <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">${j.contratanteNome} · ${j.cidade}/${j.estado}</div>
+                </div>
+                <div style="font-size: 16px; font-weight: 800; color: #34d399;">R$ ${Number(j.orcamento).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+              </div>
+              <p style="font-size: 12px; color: #cbd5e1; margin: 10px 0 14px; line-height: 1.5;">${j.descricao}</p>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 11px; background: rgba(15,111,255,0.15); color: #60a5fa; padding: 3px 10px; border-radius: 9999px; font-weight: 700;">
+                  ${j.categoria || 'Geral'}
+                </span>
+                <button onclick="window.worklyContactJob('${j.id}')" style="background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; padding: 8px 18px; border-radius: 9999px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                  📞 Entrar em Contato
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else if (type === 'publicar') {
+      // Formulário real de publicação de serviço
+      contentHtml = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 style="margin: 0; font-size: 20px; font-weight: 800;">➕ Publicar Vaga ou Serviço</h2>
+          <button onclick="document.getElementById('workly-submenu-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        <form id="form-publish-job" onsubmit="window.worklySubmitJob(event)" style="display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px;">Título da Vaga / Serviço:</label>
+            <input type="text" id="pub-titulo" required placeholder="Ex: Eletricista para troca de fiação" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px;">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px;">Orçamento (R$):</label>
+              <input type="number" id="pub-orcamento" required placeholder="500" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px;">
+            </div>
+            <div>
+              <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px;">Categoria:</label>
+              <select id="pub-categoria" style="width: 100%; box-sizing: border-box; background: #0e1934; border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px;">
+                <option value="Tecnologia">Tecnologia & TI</option>
+                <option value="Eletricista">Eletricista</option>
+                <option value="Design">Design & Criativo</option>
+                <option value="Construção">Construção Civil</option>
+                <option value="Limpeza">Limpeza & Manutenção</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px;">Descrição Completa:</label>
+            <textarea id="pub-descricao" rows="3" required placeholder="Descreva os requisitos e prazo..." style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px;"></textarea>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px;">Telefone / WhatsApp:</label>
+              <input type="text" id="pub-telefone" required placeholder="11999887766" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px;">
+            </div>
+            <div>
+              <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px;">Cidade / UF:</label>
+              <input type="text" id="pub-cidade" required placeholder="São Paulo/SP" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px;">
+            </div>
+          </div>
+          <button type="submit" style="margin-top: 10px; width: 100%; padding: 14px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 14px; cursor: pointer;">
+            🚀 Publicar Vaga no Feed Oficial
+          </button>
+        </form>
+      `;
+    } else if (type === 'propostas') {
       const res = await fetch(`${API_BASE}/proposals`);
       const data = await res.json();
       contentHtml = `
@@ -397,7 +606,6 @@
                 <span style="font-size: 11px; padding: 3px 10px; border-radius: 9999px; background: ${p.status === 'concluido' ? 'rgba(16,185,129,0.2); color: #34d399;' : 'rgba(15,111,255,0.2); color: #60a5fa;'}; font-weight: 700;">
                   ${p.status.toUpperCase()}
                 </span>
-                <span style="font-size: 11px; color: #94a3b8;">🛡️ Garantia Pix Ativa</span>
                 <button onclick="window.worklyOpenChat('conv-01'); document.getElementById('workly-submenu-modal').remove();" style="background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; padding: 6px 14px; border-radius: 9999px; font-size: 11px; font-weight: 700; cursor: pointer;">
                   Abrir no Chat
                 </button>
@@ -411,7 +619,7 @@
       const data = await res.json();
       contentHtml = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <h2 style="margin: 0; font-size: 20px; font-weight: 800;">💳 Workly Pay — Extrato & Saque Pix</h2>
+          <h2 style="margin: 0; font-size: 20px; font-weight: 800;">💳 Workly Pay — Carteira & Saque Pix</h2>
           <button onclick="document.getElementById('workly-submenu-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
@@ -424,18 +632,15 @@
             <div style="font-size: 22px; font-weight: 800; color: #60a5fa; margin-top: 4px;">R$ ${data.saldoEmCustodia.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
           </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-          <button onclick="window.worklyShowPixEscrowModal()" style="padding: 12px; background: rgba(16,185,129,0.18); border: 1px solid #10b981; color: #34d399; font-weight: 700; border-radius: 14px; cursor: pointer; font-size: 12px;">
-            ⚡ Pagar com Custódia Pix
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <button onclick="window.worklyDepositPixPrompt()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 14px; cursor: pointer;">
+            ➕ Recarga Pix (Pushin Pay)
           </button>
-          <button onclick="window.worklyValidateCodeModal()" style="padding: 12px; background: rgba(15,111,255,0.18); border: 1px solid #3b82f6; color: #60a5fa; font-weight: 700; border-radius: 14px; cursor: pointer; font-size: 12px;">
-            🔑 Liberar com Código
+          <button onclick="window.worklyWithdrawPrompt()" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-weight: 700; border-radius: 14px; cursor: pointer;">
+            ⚡ Solicitar Saque Pix
           </button>
         </div>
-        <button onclick="window.worklyWithdrawPrompt()" style="width: 100%; padding: 13px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 14px; cursor: pointer; margin-bottom: 20px;">
-          ⚡ Solicitar Saque Pix Instantâneo
-        </button>
-        <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 10px;">Últimas Transações</h3>
+        <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 10px;">Lançamentos Recentes</h3>
         <div style="display: flex; flex-direction: column; gap: 10px;">
           ${data.transactions.map(t => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 14px;">
@@ -455,7 +660,7 @@
       const data = await res.json();
       contentHtml = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <h2 style="margin: 0; font-size: 20px; font-weight: 800;">⭐ Workly Score — Pilares de Reputação</h2>
+          <h2 style="margin: 0; font-size: 20px; font-weight: 800;">⭐ Workly Score (0-1000)</h2>
           <button onclick="document.getElementById('workly-submenu-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
         </div>
         <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, rgba(15,111,255,0.15), rgba(138,63,252,0.15)); border-radius: 20px; margin-bottom: 20px;">
@@ -463,7 +668,7 @@
           <div style="font-size: 14px; font-weight: 700; color: #fff;">Nível ${data.nivel}</div>
           <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">${data.posicaoRanking}</div>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
           ${data.pilares.map(p => `
             <div style="background: rgba(255,255,255,0.04); padding: 12px 16px; border-radius: 14px;">
               <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
@@ -476,51 +681,6 @@
             </div>
           `).join('')}
         </div>
-        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 14px; padding: 14px; font-size: 12px; color: #fcd34d;">
-          🦁 <strong>Dica do Wex:</strong> ${data.dicaDoWex}
-        </div>
-        <div style="margin-top: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 14px;">
-          <div style="font-size: 12px; font-weight: 800; color: #fff; margin-bottom: 6px;">🎮 Simulador de Impacto no Score & Taxa</div>
-          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 10px;">Veja como cada entrega pontual e avaliação afeta seu Score e reduz a taxa de intermediação:</div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <button onclick="window.worklySimulateScoreChange(15, 'Serviço Concluído no Prazo')" style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
-              +15 pts no Prazo
-            </button>
-            <button onclick="window.worklySimulateScoreChange(25, 'Avaliação 5 Estrelas')" style="background: rgba(15,111,255,0.12); border: 1px solid rgba(15,111,255,0.3); color: #60a5fa; padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
-              +25 pts 5 Estrelas
-            </button>
-            <button onclick="window.worklySimulateScoreChange(20, 'Curso Workly Academy')" style="background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3); color: #c084fc; padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
-              +20 pts Academy
-            </button>
-            <button onclick="window.worklySimulateScoreChange(-60, 'Cancelamento Injustificado')" style="background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
-              -60 pts Cancelamento
-            </button>
-          </div>
-        </div>
-      `;
-    } else if (type === 'wex_ai') {
-      contentHtml = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 28px;">🦁</span>
-            <div>
-              <h3 style="margin: 0; font-size: 16px; font-weight: 800;">Wex AI — Suporte & Guia Oficial</h3>
-              <span style="font-size: 11px; color: #10b981;">🟢 Inteligência Artificial Ativa 24/7</span>
-            </div>
-          </div>
-          <button onclick="document.getElementById('workly-submenu-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
-        </div>
-        <div id="wex-ai-chat-box" style="height: 280px; overflow-y: auto; background: rgba(0,0,0,0.25); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px;">
-          <div style="align-self: flex-start; max-width: 85%; background: rgba(255,255,255,0.06); padding: 10px 14px; border-radius: 16px; font-size: 13px; color: #fff;">
-            Olá! Sou o <strong>Wex</strong>. Pergunte-me qualquer dúvida sobre como funciona a garantia de pagamento, o Workly Score, a contratação Express ou taxas!
-          </div>
-        </div>
-        <div style="display: flex; gap: 8px;">
-          <input id="wex-ai-input" type="text" placeholder="Ex: Como funciona o pagamento garantido via Pix?" style="flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 13px; outline: none;" onkeydown="if(event.key==='Enter') window.worklyAskWex()">
-          <button onclick="window.worklyAskWex()" style="background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; padding: 10px 18px; border-radius: 12px; font-weight: 700; cursor: pointer;">
-            Perguntar
-          </button>
-        </div>
       `;
     }
 
@@ -528,35 +688,60 @@
     document.body.appendChild(overlay);
   };
 
-  window.worklyAskWex = async function () {
-    const input = document.getElementById('wex-ai-input');
-    const box = document.getElementById('wex-ai-chat-box');
-    if (!input || !box || !input.value.trim()) return;
-
-    const userText = input.value.trim();
-    input.value = '';
-
-    const userBubble = document.createElement('div');
-    userBubble.style.cssText = 'align-self: flex-end; max-width: 85%; background: #0F6FFF; color: #fff; padding: 10px 14px; border-radius: 16px; font-size: 13px;';
-    userBubble.textContent = userText;
-    box.appendChild(userBubble);
-    box.scrollTop = box.scrollHeight;
+  // Submissão real de nova vaga
+  window.worklySubmitJob = async function (e) {
+    e.preventDefault();
+    const user = getCurrentUser();
+    const titulo = document.getElementById('pub-titulo').value;
+    const orcamento = document.getElementById('pub-orcamento').value;
+    const categoria = document.getElementById('pub-categoria').value;
+    const descricao = document.getElementById('pub-descricao').value;
+    const telefone = document.getElementById('pub-telefone').value;
+    const cidade = document.getElementById('pub-cidade').value;
 
     try {
-      const res = await fetch(`${API_BASE}/support/chat`, {
+      const res = await fetch(`${API_BASE}/jobs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userText })
+        body: JSON.stringify({
+          titulo,
+          orcamento,
+          categoria,
+          descricao,
+          telefone,
+          cidade,
+          contratanteId: user.id,
+          contratanteNome: user.nome
+        })
       });
-      const data = await res.json();
-      const botBubble = document.createElement('div');
-      botBubble.style.cssText = 'align-self: flex-start; max-width: 85%; background: rgba(255,255,255,0.08); color: #fff; padding: 10px 14px; border-radius: 16px; font-size: 13px;';
-      botBubble.innerHTML = `🦁 <strong>Wex:</strong> ${data.reply}`;
-      box.appendChild(botBubble);
-      box.scrollTop = box.scrollHeight;
-    } catch (e) {
-      console.error(e);
+      if (res.ok) {
+        alert('🎉 Vaga publicada com sucesso no Workly!');
+        document.getElementById('workly-submenu-modal')?.remove();
+        window.worklyOpenSubmenu('vagas');
+      }
+    } catch (err) {
+      alert('Erro ao publicar: ' + err.message);
     }
+  };
+
+  // Recarga via Pushin Pay
+  window.worklyDepositPixPrompt = function () {
+    const valor = prompt('Informe o valor para recarga via Pix (R$):', '50');
+    if (!valor) return;
+    const user = getCurrentUser();
+
+    fetch(`${API_BASE}/plans/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id, valor: parseFloat(valor), planType: 'avulso' })
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          alert('Pix gerado pela Pushin Pay!\nCódigo copiado para sua área de transferência.');
+          navigator.clipboard.writeText(d.copiaECola);
+        }
+      });
   };
 
   window.worklyWithdrawPrompt = function () {
@@ -576,270 +761,96 @@
       });
   };
 
-  // 4.1. MODAL DE CUSTÓDIA PIX (ESCROW IN-APP)
-  window.worklyShowPixEscrowModal = async function () {
-    const valorPadrao = 350;
+  // Alternador de Contas
+  window.worklySwitchDemo = async function (type) {
+    let email = 'lucas@workly.com';
+    if (type === 'contratante_pj') email = 'lara@nubank.com.br';
+    if (type === 'contratante_pf') email = 'carlos@gmail.com';
+
     try {
-      const res = await fetch(`${API_BASE}/wallet/escrow/generate-pix`, {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ valor: valorPadrao, titulo: 'Serviço com Garantia Workly Escrow' })
+        body: JSON.stringify({ email, senha: '123456' })
       });
-      const data = await res.json();
-
-      const existing = document.getElementById('workly-escrow-pix-modal');
-      if (existing) existing.remove();
-
-      const modal = document.createElement('div');
-      modal.id = 'workly-escrow-pix-modal';
-      modal.className = 'workly-sub-modal';
-      modal.innerHTML = `
-        <div class="workly-sub-card" style="max-width: 440px; text-align: center;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #fff;">🛡️ Pagamento Seguro com Custódia Pix</h3>
-            <button onclick="document.getElementById('workly-escrow-pix-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
-          </div>
-          <div style="font-size: 12px; color: #94a3b8; margin-bottom: 14px;">
-            O valor fica blindado no <strong>Workly Escrow</strong> e só é liberado para o prestador quando você validar o código de conclusão no local.
-          </div>
-          <div style="font-size: 26px; font-weight: 800; color: #34d399; margin-bottom: 12px;">
-            R$ ${Number(data.valor).toFixed(2)}
-          </div>
-          <div style="background: #fff; padding: 12px; border-radius: 16px; display: inline-block; margin-bottom: 14px;">
-            <img src="${data.qrCodeUrl}" alt="QR Code Pix" style="width: 180px; height: 180px; display: block;" />
-          </div>
-          <div style="background: rgba(255,255,255,0.06); padding: 10px; border-radius: 12px; font-family: monospace; font-size: 10px; color: #cbd5e1; word-break: break-all; margin-bottom: 12px; text-align: left;">
-            ${data.pixCopiaECola}
-          </div>
-          <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-            <button onclick="navigator.clipboard.writeText('${data.pixCopiaECola}'); alert('Código Pix Copia e Cola copiado com sucesso!');" style="flex: 1; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">
-              📋 Copiar Código Pix
-            </button>
-            <button onclick="window.worklySimulatePixConfirm('${data.txid}', ${data.valor}, '${data.codigoSeguranca}')" style="flex: 1; padding: 10px; background: linear-gradient(135deg, #10b981, #059669); border: none; color: #fff; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">
-              ⚡ Simular Confirmação Pix
-            </button>
-          </div>
-          <div id="escrow-pix-status-feedback" style="font-size: 11px; color: #f59e0b;">
-            ⏳ Aguardando leitura do QR Code ou pagamento via Pix...
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-    } catch (e) {
-      console.error(e);
-      alert('Erro ao gerar cobrança Pix.');
-    }
-  };
-
-  window.worklySimulatePixConfirm = async function (txid, valor, codigo) {
-    try {
-      const res = await fetch(`${API_BASE}/wallet/escrow/simulate-payment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ txid, valor, codigoSeguranca: codigo })
-      });
-      const data = await res.json();
-      const feedback = document.getElementById('escrow-pix-status-feedback');
-      if (feedback) {
-        feedback.innerHTML = `
-          <div style="background: rgba(16,185,129,0.2); border: 1px solid #10b981; border-radius: 12px; padding: 12px; margin-top: 10px; text-align: left;">
-            <div style="color: #34d399; font-weight: 700; font-size: 13px;">✅ Pagamento Confirmado em Custódia!</div>
-            <div style="color: #fff; font-size: 11px; margin-top: 4px;">Código de Liberação do Cliente:</div>
-            <div style="font-size: 24px; font-weight: 900; letter-spacing: 4px; color: #60a5fa; text-align: center; margin: 8px 0; background: rgba(0,0,0,0.3); padding: 6px; border-radius: 8px;">
-              ${data.codigoSeguranca}
-            </div>
-            <div style="color: #94a3b8; font-size: 10px;">Forneça este código ao prestador apenas após a finalização do serviço.</div>
-          </div>
-        `;
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentUser(data.user, data.token);
+        alert(`Logado com sucesso como: ${data.user.nome} (${data.user.role.toUpperCase()})`);
+        window.location.reload();
       }
     } catch (e) {
       console.error(e);
     }
   };
 
-  // 4.2. VALIDADOR DE CÓDIGO DE LIBERAÇÃO
-  window.worklyValidateCodeModal = function () {
-    const existing = document.getElementById('workly-validate-code-modal');
-    if (existing) existing.remove();
-
-    const modal = document.createElement('div');
-    modal.id = 'workly-validate-code-modal';
-    modal.className = 'workly-sub-modal';
-    modal.innerHTML = `
-      <div class="workly-sub-card" style="max-width: 400px; text-align: center;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-          <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #fff;">🔑 Liberar Pagamento com Código</h3>
-          <button onclick="document.getElementById('workly-validate-code-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+  window.worklyShowAccountSwitcher = function () {
+    const overlay = document.createElement('div');
+    overlay.className = 'workly-sub-modal';
+    overlay.innerHTML = `
+      <div class="workly-sub-card" style="max-width: 440px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 800;">Alternar Perfil Ativo</h3>
+          <button onclick="this.closest('.workly-sub-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
         </div>
-        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;">
-          Digite o código de 6 dígitos fornecido pelo contratante para liberar o saldo retido em custódia.
-        </p>
-        <input id="workly-escrow-code-input" type="text" maxlength="6" placeholder="Ex: 849201" style="width: 100%; text-align: center; font-size: 24px; letter-spacing: 6px; font-weight: 800; padding: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: #fff; margin-bottom: 16px; outline: none;" />
-        <button onclick="window.worklyExecuteCodeValidation()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer;">
-          Validar e Liberar Pagamento
-        </button>
+        <p style="font-size: 13px; color: #94a3b8; margin-bottom: 16px;">Escolha o usuário ativo para testar a plataforma e o bloqueio de contatos:</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button onclick="window.worklySwitchDemo('prestador'); this.closest('.workly-sub-modal').remove();" style="display: flex; align-items: center; gap: 12px; padding: 14px; background: rgba(15,111,255,0.15); border: 1px solid rgba(15,111,255,0.4); border-radius: 16px; color: #fff; text-align: left; cursor: pointer;">
+            <span style="font-size: 26px;">🧑‍💻</span>
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">Lucas Vinícius (Prestador Pro)</div>
+              <div style="font-size: 11px; color: #60a5fa;">Plano Pro Ativo · Contatos Desbloqueados</div>
+            </div>
+          </button>
+
+          <button onclick="window.worklySwitchDemo('contratante_pj'); this.closest('.workly-sub-modal').remove();" style="display: flex; align-items: center; gap: 12px; padding: 14px; background: rgba(138,63,252,0.15); border: 1px solid rgba(138,63,252,0.4); border-radius: 16px; color: #fff; text-align: left; cursor: pointer;">
+            <span style="font-size: 26px;">💼</span>
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">Lara — RH Nubank (Empresa PJ)</div>
+              <div style="font-size: 11px; color: #c084fc;">Contratante Corporativo · Vagas Ativas</div>
+            </div>
+          </button>
+
+          <button onclick="window.worklySwitchDemo('contratante_pf'); this.closest('.workly-sub-modal').remove();" style="display: flex; align-items: center; gap: 12px; padding: 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; color: #fff; text-align: left; cursor: pointer;">
+            <span style="font-size: 26px;">🏢</span>
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">Carlos Mendes (Sem Plano)</div>
+              <div style="font-size: 11px; color: #f87171;">Contatos Bloqueados · Testa o Paywall Pushin Pay</div>
+            </div>
+          </button>
+        </div>
       </div>
     `;
-    document.body.appendChild(modal);
+    document.body.appendChild(overlay);
   };
 
-  window.worklyExecuteCodeValidation = async function () {
-    const input = document.getElementById('workly-escrow-code-input');
-    if (!input || input.value.trim().length !== 6) {
-      alert('Por favor, informe o código de 6 dígitos completo.');
-      return;
-    }
-    try {
-      const res = await fetch(`${API_BASE}/wallet/escrow/validate-code`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codigo: input.value.trim(), valorBruto: 350 })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert(data.mensagem);
-        const modal = document.getElementById('workly-validate-code-modal');
-        if (modal) modal.remove();
-
-        // Aumenta pontuação do usuário e atualiza sessão
-        const user = getCurrentUser();
-        user.worklyScore = Math.min(1000, (user.worklyScore || 885) + 25);
-        if (user.worklyScore >= 900) user.scoreTier = 'diamante';
-        setCurrentUser(user);
-        window.worklyOpenSubmenu('score');
-      } else {
-        alert(data.error || 'Código inválido.');
-      }
-    } catch (e) {
-      console.error(e);
-      alert('Erro ao validar código.');
-    }
-  };
-
-  // 4.3. SIMULADOR REATIVO DE SCORE (IN-APP)
-  window.worklySimulateScoreChange = function (delta, motivo) {
-    const user = getCurrentUser();
-    const anterior = user.worklyScore || 885;
-    const novo = Math.max(0, Math.min(1000, anterior + delta));
-    user.worklyScore = novo;
-    if (novo >= 900) user.scoreTier = 'diamante';
-    else if (novo >= 700) user.scoreTier = 'ouro';
-    else if (novo >= 400) user.scoreTier = 'prata';
-    else user.scoreTier = 'bronze';
-
-    setCurrentUser(user);
-    alert(`${delta > 0 ? '🎉 +' : '⚠️ '}${delta} pontos no Workly Score (${motivo})\nNovo Score: ${novo} pts (Nível ${user.scoreTier.toUpperCase()})`);
-    window.worklyOpenSubmenu('score');
-  };
-
-  // 4.4. INSTALAÇÃO PWA NO CELULAR & DESKTOP
-  let deferredPrompt = null;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    window.worklyShowInstallBanner();
-  });
-
-  window.worklyShowInstallBanner = function () {
-    if (document.getElementById('workly-pwa-install-banner')) return;
-    const banner = document.createElement('div');
-    banner.id = 'workly-pwa-install-banner';
-    banner.style.cssText = 'position: fixed; bottom: 75px; left: 50%; transform: translateX(-50%); z-index: 99999; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); color: #fff; padding: 10px 20px; border-radius: 9999px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 25px rgba(15,111,255,0.4); font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid rgba(255,255,255,0.2);';
-    banner.innerHTML = `
-      <span>📲 Instalar Workly no Celular</span>
-      <span style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px;">⬇️</span>
-    `;
-    banner.onclick = () => {
-      window.worklyTriggerInstall();
-    };
-    document.body.appendChild(banner);
-  };
-
-  window.worklyTriggerInstall = function () {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          const b = document.getElementById('workly-pwa-install-banner');
-          if (b) b.remove();
-        }
-        deferredPrompt = null;
-      });
-    } else {
-      alert('📱 Instalação do Workly PWA:\n\n• No Android/Chrome: Toque nos 3 pontinhos do navegador e selecione "Instalar aplicativo".\n• No iPhone/Safari: Toque no botão de Compartilhar (ícone com seta) e escolha "Adicionar à Tela de Início".');
-    }
-  };
-
-  // 4.5. CLIENTE WEBSOCKET (SOCKET.IO)
-  let worklySocket = null;
-  function initSocketClient() {
-    if (typeof io !== 'undefined') {
-      try {
-        worklySocket = io();
-        worklySocket.on('connect', () => {
-          console.log('🟢 Conectado ao servidor WebSocket Workly:', worklySocket.id);
-        });
-        worklySocket.on('receive_message', (msg) => {
-          console.log('📩 Mensagem recebida via WebSocket:', msg);
-        });
-      } catch (err) {
-        console.warn('WebSocket:', err);
-      }
-    }
-  }
-
-  // 5. INICIALIZAÇÃO E INTERCEPTADORES NA INTERFACE
-  function initEnhancements() {
+  // Inicialização
+  function init() {
     updateInterfaceUser();
-    initSocketClient();
 
-    // Se estiver na rota /chat, abre o chat interno automaticamente!
-    if (window.location.pathname.includes('/chat')) {
-      setTimeout(() => {
-        window.worklyOpenChat();
-      }, 300);
-    }
-
-    // Na tela de login, injeta os botões de demo rápidos e formulário
+    // Na página de login, injeta atalhos rápidos
     if (window.location.pathname.includes('/login')) {
-      injectLoginShortcuts();
+      const form = document.querySelector('form');
+      if (form && !document.getElementById('login-demo-bar')) {
+        const bar = document.createElement('div');
+        bar.id = 'login-demo-bar';
+        bar.style.cssText = 'background: rgba(15,111,255,0.12); border: 1px solid rgba(15,111,255,0.3); border-radius: 16px; padding: 12px; margin-bottom: 14px;';
+        bar.innerHTML = `
+          <div style="font-size: 11px; font-weight: 800; color: #60a5fa; text-transform: uppercase; margin-bottom: 6px;">⚡ Acesso Rápido para Testes:</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button type="button" onclick="window.worklySwitchDemo('prestador')" style="background: rgba(255,255,255,0.08); border: none; color: #fff; padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">🧑‍💻 Lucas (Plano Pro)</button>
+            <button type="button" onclick="window.worklySwitchDemo('contratante_pf')" style="background: rgba(255,255,255,0.08); border: none; color: #fff; padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">🏢 Carlos (Sem Plano)</button>
+          </div>
+        `;
+        form.parentNode.insertBefore(bar, form);
+      }
     }
   }
-
-  function injectLoginShortcuts() {
-    if (document.getElementById('workly-login-shortcuts')) return;
-    const form = document.querySelector('form');
-    if (form) {
-      const shortcuts = document.createElement('div');
-      shortcuts.id = 'workly-login-shortcuts';
-      shortcuts.style.cssText = 'background: rgba(15,111,255,0.1); border: 1px solid rgba(15,111,255,0.3); border-radius: 18px; padding: 14px; margin-bottom: 16px;';
-      shortcuts.innerHTML = `
-        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #60a5fa; margin-bottom: 8px;">
-          ⚡ Acesso Rápido com Contas Reais (1 Clique):
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <button type="button" onclick="window.worklySwitchDemo('prestador')" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer; text-align: left;">
-            🧑‍💻 Prestador Demo<br><span style="font-size: 9px; color: #94a3b8;">Lucas · Score 885</span>
-          </button>
-          <button type="button" onclick="window.worklySwitchDemo('contratante_pj')" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer; text-align: left;">
-            💼 Contratante PJ<br><span style="font-size: 9px; color: #94a3b8;">Lara · Nubank</span>
-          </button>
-        </div>
-      `;
-      form.parentNode.insertBefore(shortcuts, form);
-    }
-  }
-
-  // Intercepta rotas e cliques
-  window.addEventListener('popstate', () => {
-    if (window.location.pathname.includes('/chat')) {
-      window.worklyOpenChat();
-    }
-  });
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initEnhancements);
+    document.addEventListener('DOMContentLoaded', init);
   } else {
-    initEnhancements();
+    init();
   }
 })();

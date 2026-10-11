@@ -90,7 +90,7 @@
 
     const navItems = [
       { to: '/home', icon: '🏠', label: 'Início', group: 'Principal' },
-      { to: '/oportunidades', icon: '💼', label: 'Vagas & Serviços', badge: '2.1k', group: 'Principal' },
+      { to: '#vagas', action: "window.worklyOpenSubmenu('vagas')", icon: '💼', label: 'Vagas & Oportunidades', badge: '2.1k', group: 'Principal' },
       { to: '/express', icon: '⚡', label: 'Workly Express', badge: 'Urgente', group: 'Principal' },
       { to: '#chat', action: "window.worklyOpenChat('conv-01')", icon: '💬', label: 'Chat Interno Real', badge: 'Ativo', group: 'Principal' },
       { to: '/perfil', icon: '👤', label: 'Meu Perfil', group: 'Principal' },
@@ -102,11 +102,13 @@
       { to: '#score', action: "window.worklyOpenSubmenu('score')", icon: '⭐', label: 'Pilares & Simulador Score', group: 'Finanças & Garantia' },
       { to: '/verified', icon: '🛡️', label: 'Workly Verified', badge: 'Selo Pro', group: 'Finanças & Garantia' },
 
+      { to: '#publicar-vaga', action: "window.worklyOpenSubmenu('publicar_vaga')", icon: '➕', label: 'Publicar Vaga', badge: 'Novo', group: 'Gestão de Vagas' },
+      { to: '#meus-anuncios', action: "window.worklyOpenSubmenu('meus_anuncios')", icon: '📢', label: 'Meus Anúncios', group: 'Gestão de Vagas' },
+
       { to: '#wex-ai', action: "window.worklyOpenSubmenu('wex_ai')", icon: '🦁', label: 'Suporte Wex AI', badge: '24/7', group: 'Assistência & Ajustes' },
       { to: '#instalar-app', action: "window.worklyTriggerInstall()", icon: '📲', label: 'Instalar App (PWA)', badge: 'App', group: 'Assistência & Ajustes' },
       { to: '#conta', action: "window.worklyShowAccountSwitcher()", icon: '⚙️', label: 'Trocar Conta / Login', group: 'Assistência & Ajustes' },
       { to: '/empresas', icon: '🏢', label: 'Para Empresas', group: 'Negócios' },
-      { to: '/publicar-servico', icon: '➕', label: 'Publicar Vaga', group: 'Negócios' },
       { to: '/notificacoes', icon: '🔔', label: 'Notificações', group: 'Negócios' }
     ];
 
@@ -196,5 +198,22 @@
     if (target && target.getAttribute('href')?.startsWith('/')) {
       setTimeout(updateRouteState, 150);
     }
-  });
+
+    // Intercepta botões nativos do template de oportunidade para acionar o Paywall/Contato Real
+    const btn = e.target.closest('button, a');
+    if (btn && !btn.closest('.workly-sub-modal') && !btn.closest('#workly-desktop-sidebar') && !btn.closest('#workly-desktop-topbar')) {
+      const text = (btn.innerText || btn.textContent || '').trim().toLowerCase();
+      if (text.includes('candidatar') || text.includes('entrar em contato') || text.includes('falar com') || text.includes('quero essa vaga') || text.includes('proposta')) {
+        if (!btn.getAttribute('data-workly-handled')) {
+          e.preventDefault();
+          e.stopPropagation();
+          const card = btn.closest('[data-job-id]') || btn.closest('.card, article, div');
+          const jobId = card?.getAttribute('data-job-id') || 'job-001';
+          if (typeof window.worklyContactJob === 'function') {
+            window.worklyContactJob(jobId);
+          }
+        }
+      }
+    }
+  }, true);
 })();

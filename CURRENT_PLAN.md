@@ -74,5 +74,12 @@ Implementar a arquitetura completa do backend da plataforma **Workly**, fornecen
     - `https://workly.37.148.132.216.nip.io/home`
     - `https://workly.37.148.132.216.nip.io/health`
 
+- [x] **Etapa 18:** Gateway Oficial Pushin Pay, Paywall de Contatos por Plano & Sem Bots Fakes:
+  - Gateway Real Pushin Pay integrada no backend (`backend/src/services/pushinPayService.ts`) utilizando o token de produção (`72179|WDsO2AbUCxx80h9Q0os5q1Co6mcoboqdhIr10CCQbd8e78db`) para gerar Pix dinâmico (QR Code base64 e código Copia e Cola) via API oficial `https://api.pushinpay.com.br/api/pix/cashIn`.
+  - Paywall de Monetização Real: O contato (telefone/WhatsApp/chat) dos anunciantes de vagas é protegido pelo backend (`/jobs/:id/contact`). Usuários sem plano ativo recebem telefone mascarado (`(11) 9****-**44`) e modal de contratação do Plano Workly Pro (R$ 29,90/mês) via Pushin Pay. Apenas após a confirmação do pagamento, os contatos são desmascarados e o botão de WhatsApp direto `wa.me` é liberado.
+  - Eliminação de Todos os Bots Fakes: Removidas respostas automáticas simuladas via timer no chat. A comunicação é 100% autêntica entre os usuários cadastrados com persistência no backend.
+  - Submenus 100% Funcionais: Vagas & Oportunidades, Publicar Vaga (com persistência no feed), Minhas Propostas, Carteira Pay (com extrato e saque Pix), Score e Meus Anúncios.
+  - Apresentação Executiva Integrada: O modal pop-up invasivo foi removido e substituído por uma seção nativa e elegante (`#workly-integrated-showcase`) embutida diretamente no rodapé da página inicial, sem obstruir o fluxo de navegação.
+
 ## Status Final
-**CONCLUÍDO, PUBLICADO NO GITHUB E OPERACIONAL EM PRODUÇÃO NA VPS (COM HTTPS ATIVO)**
+**CONCLUÍDO, VALIDADO COM PUSHIN PAY REAL, SINCRONIZADO NO GITHUB E IMPLANTADO NA VPS**

@@ -223,31 +223,49 @@ export class ChatController {
     }
     mockMessages[id].push(newMessage);
 
-    // Atualiza conversa
+    // Atualiza conversa com a última mensagem real
     conversation.lastMessage = type === 'proposal' ? `Proposta de R$ ${metadata?.valor || 0}` : content;
     conversation.lastMessageTime = 'Agora';
 
-    // Resposta automática simulada se o contratante/prestador estiver em demo
-    if (type === 'text') {
-      setTimeout(() => {
-        const autoReply: ChatMessage = {
-          id: 'msg-' + uuidv4().slice(0, 8),
-          conversationId: id,
-          senderId: isContratante ? conversation.prestadorId : conversation.contratanteId,
-          senderName: isContratante ? conversation.prestadorNome : conversation.contratanteNome,
-          senderRole: isContratante ? 'prestador' : 'contratante',
-          content: isContratante
-            ? 'Entendido! Estou revisando os detalhes para iniciarmos com a garantia Workly.'
-            : 'Perfeito, recebido! O pagamento já está assegurado na custódia.',
-          type: 'text',
-          createdAt: new Date().toISOString()
-        };
-        mockMessages[id].push(autoReply);
-        conversation.lastMessage = autoReply.content;
-      }, 1200);
+    return res.status(201).json({ message: newMessage });
+  }
+
+  // Iniciar uma nova conversa real entre contratante e prestador
+  public static startConversation(req: Request, res: Response) {
+    const { contratanteId, prestadorId, jobId, jobTitle, contratanteNome, prestadorNome } = req.body;
+
+    if (!contratanteId || !prestadorId) {
+      return res.status(400).json({ error: 'contratanteId e prestadorId são obrigatórios.' });
     }
 
-    return res.status(201).json({ message: newMessage });
+    // Verifica se já existe conversa entre os dois para a vaga ou geral
+    let conversation = mockConversations.find(
+      c => (c.contratanteId === contratanteId && c.prestadorId === prestadorId) ||
+           (c.contratanteId === prestadorId && c.prestadorId === contratanteId)
+    );
+
+    if (!conversation) {
+      conversation = {
+        id: 'conv-' + uuidv4().slice(0, 8),
+        contratanteId,
+        contratanteNome: contratanteNome || 'Contratante',
+        contratanteAvatar: '💼',
+        prestadorId,
+        prestadorNome: prestadorNome || 'Profissional',
+        prestadorAvatar: '🧑‍💻',
+        jobId,
+        jobTitle: jobTitle || 'Serviço Profissional',
+        status: 'ativa',
+        lastMessage: 'Conversa iniciada',
+        lastMessageTime: 'Agora',
+        unreadCountContratante: 0,
+        unreadCountPrestador: 0
+      };
+      mockConversations.unshift(conversation);
+      mockMessages[conversation.id] = [];
+    }
+
+    return res.json({ conversation });
   }
 
   // Liberar custódia (Escrow) dentro da conversa

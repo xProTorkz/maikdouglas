@@ -38,4 +38,13 @@ router.post('/wallet/escrow/generate-pix', submenuController_1.SubmenuController
 router.post('/wallet/escrow/simulate-payment', submenuController_1.SubmenuController.simulatePixPayment);
 router.post('/wallet/escrow/validate-code', submenuController_1.SubmenuController.validateEscrowCode);
 router.post('/support/chat', submenuController_1.SubmenuController.chatWithWex);
+// 7. ROTAS DE CONTATO E INÍCIO DE CONVERSA REAL
+router.get('/jobs/:id/contact', jobController_1.JobController.getContact);
+router.post('/conversations/start', chatController_1.ChatController.startConversation);
+// 8. ROTAS DE PLANOS & ASSINATURA PUSHIN PAY (DESBLOQUEIO DE CONTATOS)
+const planController_1 = require("../controllers/planController");
+router.post('/plans/subscribe', planController_1.PlanController.subscribe);
+router.get('/plans/check-payment/:transacaoId', planController_1.PlanController.checkPayment);
+router.get('/plans/status/:userId', planController_1.PlanController.getPlanStatus);
+router.post('/plans/activate-manual', planController_1.PlanController.activateManual);
 exports.default = router;

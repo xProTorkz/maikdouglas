@@ -23,7 +23,7 @@ app.use(cors());
 app.use(express.json());
 
 // Gerenciador de eventos WebSocket em tempo real
-io.on('connection', (socket) => {
+io.on('connection', (socket: any) => {
   console.log(`🔌 Cliente WebSocket conectado: ${socket.id}`);
 
   socket.on('join_conversation', (conversationId: string) => {

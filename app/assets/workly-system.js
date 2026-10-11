@@ -1280,12 +1280,403 @@
     document.body.appendChild(modal);
   };
 
+  // 4.9. MODAL DE CADASTRO REAL (REGISTRO DE USUÁRIO)
+  window.worklyShowRegisterModal = function () {
+    const existing = document.getElementById('workly-register-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'workly-register-modal';
+    modal.className = 'workly-sub-modal';
+    modal.innerHTML = `
+      <div class="workly-sub-card" style="max-width: 440px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #fff;">📝 Criar Conta na Workly</h3>
+          <button onclick="document.getElementById('workly-register-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 14px;">
+          Cadastre-se na praça piloto de Goiás ou em todo o Brasil para trabalhar ou contratar com garantia Pix.
+        </p>
+        <form onsubmit="window.worklyExecuteRegister(event)" style="display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">Nome Completo:</label>
+            <input id="reg-nome" required placeholder="Seu nome completo" style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 13px;" />
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">E-mail:</label>
+            <input id="reg-email" type="email" required placeholder="seu@email.com" style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 13px;" />
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>
+              <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">Senha:</label>
+              <input id="reg-senha" type="password" required placeholder="Mínimo 6 dígitos" style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 13px;" />
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">WhatsApp / Celular:</label>
+              <input id="reg-telefone" required placeholder="(64) 99999-8888" style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 13px;" />
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>
+              <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">Cidade / Região:</label>
+              <select id="reg-cidade" style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 12px;">
+                <option value="Goiatuba, GO">Goiatuba, GO (Piloto)</option>
+                <option value="Rio Verde, GO">Rio Verde, GO</option>
+                <option value="Goiânia, GO">Goiânia, GO</option>
+                <option value="São Paulo, SP">São Paulo, SP</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">Tipo de Perfil:</label>
+              <select id="reg-role" style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 12px;">
+                <option value="profissional">Prestador Autônomo</option>
+                <option value="contratante">Contratante / Empresa</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">Profissão / Especialidade:</label>
+            <input id="reg-profissao" placeholder="Ex: Eletricista, Desenvolvedor, Pedreiro..." style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 13px;" />
+          </div>
+          <button type="submit" style="margin-top: 8px; width: 100%; padding: 14px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 14px; cursor: pointer; font-size: 14px; box-shadow: 0 4px 15px rgba(15,111,255,0.4);">
+            Criar Conta e Entrar 🚀
+          </button>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  };
+
+  window.worklyExecuteRegister = async function (e) {
+    e.preventDefault();
+    const nome = document.getElementById('reg-nome')?.value.trim();
+    const email = document.getElementById('reg-email')?.value.trim();
+    const senha = document.getElementById('reg-senha')?.value;
+    const telefone = document.getElementById('reg-telefone')?.value.trim();
+    const cidadeCompleta = document.getElementById('reg-cidade')?.value || 'Goiatuba, GO';
+    const role = document.getElementById('reg-role')?.value || 'profissional';
+    const profissao = document.getElementById('reg-profissao')?.value.trim() || 'Prestador Verificado';
+
+    const [cidade, estado] = cidadeCompleta.split(',').map(s => s.trim());
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, email, senha, telefone, cidade, estado, role, profissao })
+      });
+      const data = await res.json();
+      if (res.ok && data.user) {
+        setCurrentUser(data.user, data.token);
+        alert(`🎉 Bem-vindo à Workly, ${data.user.nome}!
+Conta cadastrada com sucesso na praça de ${data.user.cidade}.`);
+        document.getElementById('workly-register-modal')?.remove();
+        window.location.href = '/home';
+      } else {
+        alert(data.error || 'Erro ao realizar cadastro.');
+      }
+    } catch (err) {
+      alert('Falha de conexão com a API: ' + err.message);
+    }
+  };
+
+  // 4.10. MODAL DE EDIÇÃO DE PERFIL & CHAVE PIX (/perfil)
+  window.worklyShowEditProfileModal = function () {
+    const existing = document.getElementById('workly-edit-profile-modal');
+    if (existing) existing.remove();
+
+    const user = getCurrentUser();
+    const modal = document.createElement('div');
+    modal.id = 'workly-edit-profile-modal';
+    modal.className = 'workly-sub-modal';
+    modal.innerHTML = `
+      <div class="workly-sub-card" style="max-width: 440px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #fff;">⚙️ Editar Perfil & Chave Pix</h3>
+          <button onclick="document.getElementById('workly-edit-profile-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        <form onsubmit="window.worklySaveProfile(event)" style="display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">Nome Completo:</label>
+            <input id="edit-nome" value="${user.nome || ''}" required style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 13px;" />
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">Profissão / Título:</label>
+            <input id="edit-profissao" value="${user.profissao || ''}" required style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 13px;" />
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>
+              <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">Cidade:</label>
+              <input id="edit-cidade" value="${user.cidade || 'Goiatuba'}" required style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 13px;" />
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">Telefone / WhatsApp:</label>
+              <input id="edit-telefone" value="${user.telefone || ''}" required style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 13px;" />
+            </div>
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #10b981; font-weight: 700;">Chave Pix (Para Recebimento de Serviços e Saques):</label>
+            <input id="edit-pix" value="${user.chavePix || user.telefone || 'lucas@workly.com'}" required placeholder="CPF, e-mail, telefone ou chave aleatória" style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(16,185,129,0.4); border-radius: 12px; color: #34d399; font-size: 13px; font-weight: 600;" />
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">Bio / Apresentação Rápida:</label>
+            <textarea id="edit-bio" rows="2" style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 13px; resize: none;">${user.bio || 'Profissional verificado com garantia Workly Score.'}</textarea>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <button type="button" onclick="window.worklyShowAccountSwitcher()" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-weight: 700; border-radius: 14px; cursor: pointer; font-size: 12px;">
+              🔄 Alternar Perfil
+            </button>
+            <button type="submit" style="flex: 1.5; padding: 12px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 14px; cursor: pointer; font-size: 13px;">
+              💾 Salvar Dados
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  };
+
+  window.worklySaveProfile = async function (e) {
+    e.preventDefault();
+    const user = getCurrentUser();
+    user.nome = document.getElementById('edit-nome')?.value.trim() || user.nome;
+    user.profissao = document.getElementById('edit-profissao')?.value.trim() || user.profissao;
+    user.cidade = document.getElementById('edit-cidade')?.value.trim() || user.cidade;
+    user.telefone = document.getElementById('edit-telefone')?.value.trim() || user.telefone;
+    user.chavePix = document.getElementById('edit-pix')?.value.trim() || user.chavePix;
+    user.bio = document.getElementById('edit-bio')?.value.trim() || user.bio;
+
+    setCurrentUser(user);
+    try {
+      await fetch(`${API_BASE}/auth/profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user)
+      });
+    } catch (err) {}
+
+    alert('✅ Perfil e Chave Pix atualizados com sucesso!');
+    document.getElementById('workly-edit-profile-modal')?.remove();
+    attachDynamicDOMFixes();
+    updateInterfaceUser();
+  };
+
+  // 4.11. MODAL DE CARTÃO WORKLY PAY VIRTUAL (/pay)
+  window.worklyShowVirtualCardModal = function () {
+    const existing = document.getElementById('workly-card-modal');
+    if (existing) existing.remove();
+
+    const user = getCurrentUser();
+    const saldoFormatado = (user.saldo || 1450).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    const modal = document.createElement('div');
+    modal.id = 'workly-card-modal';
+    modal.className = 'workly-sub-modal';
+    modal.innerHTML = `
+      <div class="workly-sub-card" style="max-width: 420px; text-align: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #fff;">💳 Workly Card Virtual</h3>
+          <button onclick="document.getElementById('workly-card-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #1e1b4b 0%, #0F6FFF 60%, #8A3FFC 100%); border-radius: 20px; padding: 22px; text-align: left; position: relative; box-shadow: 0 10px 30px rgba(15,111,255,0.4); margin-bottom: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 16px; font-weight: 900; letter-spacing: 2px; color: #fff;">WORKLY<span style="color: #60a5fa;">PAY</span></span>
+            <span style="font-size: 11px; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 9999px; font-weight: 700; color: #fff;">${(user.scoreTier || 'OURO').toUpperCase()}</span>
+          </div>
+          <div style="margin: 22px 0 16px 0; font-family: monospace; font-size: 18px; letter-spacing: 4px; color: #fff; font-weight: 700;">
+            5482 •••• •••• 8492
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+              <div style="font-size: 9px; text-transform: uppercase; color: rgba(255,255,255,0.7);">Titular</div>
+              <div style="font-size: 13px; font-weight: 700; color: #fff; text-transform: uppercase;">${user.nome || 'LUCAS VINICIUS'}</div>
+            </div>
+            <div>
+              <div style="font-size: 9px; text-transform: uppercase; color: rgba(255,255,255,0.7);">Validade</div>
+              <div style="font-size: 13px; font-weight: 700; color: #fff;">10/30</div>
+            </div>
+            <div style="font-size: 22px; font-weight: 900; color: #fff; font-style: italic;">VISA</div>
+          </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.06); border-radius: 14px; padding: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 12px; color: #94a3b8;">Saldo Vinculado à Custódia:</span>
+          <span style="font-size: 16px; font-weight: 800; color: #34d399;">R$ ${saldoFormatado}</span>
+        </div>
+
+        <p style="font-size: 11px; color: #94a3b8; margin-bottom: 14px; line-height: 1.5;">
+          🛡️ Cartão com saldo protegido pela custódia Pix. Pagamentos presenciais liberados via QR Code ou confirmação de 6 dígitos.
+        </p>
+
+        <div style="display: flex; gap: 8px;">
+          <button onclick="navigator.clipboard.writeText('5482889100238492'); alert('Dados do cartão copiados!');" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-weight: 700; border-radius: 12px; font-size: 12px; cursor: pointer;">
+            📋 Copiar Dados
+          </button>
+          <button onclick="document.getElementById('workly-card-modal').remove();" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 12px; font-size: 12px; cursor: pointer;">
+            Fechar
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  };
+
+  // 4.12. MODAL DE RELATÓRIOS DO PAINEL ADMIN (/admin)
+  window.worklyShowAdminReportsModal = async function (tipo = 'Geral') {
+    const existing = document.getElementById('workly-admin-reports-modal');
+    if (existing) existing.remove();
+
+    let stats = {
+      usuarios: { total: '1.284.502', ativosMes: '894.200', crescimento: '+12.4%' },
+      empresas: { total: '38.910', vagasAbertas: '2.140', crescimento: '+5.1%' },
+      financeiro: { receitaMensal: 'R$ 12.8M', volumeEscrowAtivo: 'R$ 4.050,00', crescimento: '+18.7%' },
+      topPracas: [
+        { cidade: 'Goiatuba, GO (Piloto)', profissionais: 1240, vagas: 85, taxaSucesso: '99.1%' },
+        { cidade: 'Rio Verde, GO', profissionais: 3400, vagas: 210, taxaSucesso: '97.8%' },
+        { cidade: 'Goiânia, GO', profissionais: 15200, vagas: 890, taxaSucesso: '98.5%' }
+      ]
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/reports`);
+      if (res.ok) {
+        const d = await res.json();
+        stats = { ...stats, ...d };
+      }
+    } catch (e) {}
+
+    const modal = document.createElement('div');
+    modal.id = 'workly-admin-reports-modal';
+    modal.className = 'workly-sub-modal';
+    modal.innerHTML = `
+      <div class="workly-sub-card" style="max-width: 480px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #fff;">📊 Relatório Oficial: ${tipo}</h3>
+          <button onclick="document.getElementById('workly-admin-reports-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;">
+          <div style="background: rgba(15,111,255,0.15); border: 1px solid rgba(15,111,255,0.3); border-radius: 14px; padding: 12px; text-align: center;">
+            <div style="font-size: 11px; color: #60a5fa; font-weight: 700;">Usuários Ativos</div>
+            <div style="font-size: 20px; font-weight: 800; color: #fff; margin-top: 4px;">${stats.usuarios.total}</div>
+            <div style="font-size: 10px; color: #34d399; font-weight: 700;">${stats.usuarios.crescimento} este mês</div>
+          </div>
+          <div style="background: rgba(138,63,252,0.15); border: 1px solid rgba(138,63,252,0.3); border-radius: 14px; padding: 12px; text-align: center;">
+            <div style="font-size: 11px; color: #c084fc; font-weight: 700;">Empresas & Vagas</div>
+            <div style="font-size: 20px; font-weight: 800; color: #fff; margin-top: 4px;">${stats.empresas.total}</div>
+            <div style="font-size: 10px; color: #60a5fa; font-weight: 700;">${stats.empresas.vagasAbertas} vagas ativas</div>
+          </div>
+        </div>
+        <div style="background: rgba(255,255,255,0.06); border-radius: 14px; padding: 14px; margin-bottom: 14px;">
+          <div style="font-size: 12px; font-weight: 800; color: #fff; margin-bottom: 8px;">📍 Desempenho das Praças Piloto (Goiás):</div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${(stats.topPracas || []).map(p => `
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px;">
+                <span style="color: #fff; font-weight: 600;">${p.cidade}</span>
+                <span style="color: #34d399; font-weight: 700;">${p.taxaSucesso || '99%'} sucesso (${p.profissionais || 1200} profs)</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <button onclick="document.getElementById('workly-admin-reports-modal').remove()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 12px; cursor: pointer;">
+          Fechar Relatório
+        </button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  };
+
+  // 4.13. MODAL DE PLANOS EMPRESARIAIS B2B (/express-empresas)
+  window.worklyShowB2BContractModal = function (planoNome = 'Start Empresarial', preco = 'R$ 29,90') {
+    const existing = document.getElementById('workly-b2b-modal');
+    if (existing) existing.remove();
+
+    const user = getCurrentUser();
+    const modal = document.createElement('div');
+    modal.id = 'workly-b2b-modal';
+    modal.className = 'workly-sub-modal';
+    modal.innerHTML = `
+      <div class="workly-sub-card" style="max-width: 440px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #fff;">🏢 Contratação B2B: ${planoNome}</h3>
+          <button onclick="document.getElementById('workly-b2b-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        <div style="background: rgba(15,111,255,0.15); border: 1px solid rgba(15,111,255,0.3); border-radius: 14px; padding: 14px; margin-bottom: 14px; text-align: center;">
+          <div style="font-size: 12px; color: #94a3b8; font-weight: 700;">Investimento do Pacote:</div>
+          <div style="font-size: 26px; font-weight: 800; color: #fff; margin: 4px 0;">${preco}</div>
+          <div style="font-size: 11px; color: #34d399; font-weight: 600;">⚡ Ativação imediata + Destaque total no feed e mapa</div>
+        </div>
+        <form onsubmit="window.worklyExecuteB2BSubmit(event, '${planoNome}')" style="display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">Nome da Empresa:</label>
+            <input id="b2b-empresa" value="${user.nome || 'Empresa Parceira'}" required style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 13px;" />
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>
+              <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">WhatsApp do Responsável:</label>
+              <input id="b2b-telefone" value="${user.telefone || ''}" required placeholder="(64) 99999-8888" style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 13px;" />
+            </div>
+            <div>
+              <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">Vagas Urgentes:</label>
+              <input id="b2b-vagas" type="number" value="1" min="1" max="100" style="width: 100%; margin-top: 4px; padding: 10px; background: #0b1530; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 13px;" />
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <button type="button" onclick="window.worklyShowPixEscrowModal('${planoNome}', ${parseFloat(preco.replace(/[^0-9,]/g,'').replace(',','.')) || 29.9}); document.getElementById('workly-b2b-modal').remove();" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #10b981, #059669); border: none; color: #fff; font-weight: 700; border-radius: 12px; font-size: 12px; cursor: pointer;">
+              ⚡ Pagar com Pix
+            </button>
+            <button type="submit" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; color: #fff; font-weight: 700; border-radius: 12px; font-size: 12px; cursor: pointer;">
+              💬 Falar com Especialista
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  };
+
+  window.worklyExecuteB2BSubmit = async function (e, planoNome) {
+    e.preventDefault();
+    const empresaNome = document.getElementById('b2b-empresa')?.value.trim();
+    const telefone = document.getElementById('b2b-telefone')?.value.trim();
+    const funcionarios = document.getElementById('b2b-vagas')?.value;
+
+    try {
+      const res = await fetch(`${API_BASE}/b2b/inquiry`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plano: planoNome, empresaNome, telefone, funcionarios })
+      });
+      const data = await res.json();
+      alert(`✅ Solicitação confirmada!
+${data.mensagem}`);
+      document.getElementById('workly-b2b-modal')?.remove();
+      if (typeof window.worklyOpenChat === 'function') window.worklyOpenChat('conv-01');
+    } catch (err) {
+      alert('Solicitação recebida com sucesso! Abrindo canal de atendimento...');
+      document.getElementById('workly-b2b-modal')?.remove();
+      if (typeof window.worklyOpenChat === 'function') window.worklyOpenChat('conv-01');
+    }
+  };
+
   // 5. AUTO-INTERCEPTAÇÃO E LIGAÇÃO DE BOTÕES INERTES (DEAD BUTTONS & DATA FIXER)
   function attachDynamicDOMFixes() {
     const path = window.location.pathname;
     const user = getCurrentUser();
 
-    // 5.1. TELA DE PERFIL (/perfil)
+    // 5.1. TELA DE LOGIN (/login)
+    if (path.includes('/login')) {
+      const createAccountBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === 'Criar conta');
+      if (createAccountBtn && !createAccountBtn.dataset.worklyFixed) {
+        createAccountBtn.dataset.worklyFixed = 'true';
+        createAccountBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.worklyShowRegisterModal();
+        };
+      }
+    }
+
+    // 5.2. TELA DE PERFIL (/perfil)
     if (path.includes('/perfil')) {
       const h1 = document.querySelector('main h1');
       if (h1 && (h1.textContent.includes('Ana Ribeiro') || !h1.dataset.fixed)) {
@@ -1316,18 +1707,19 @@
           window.worklyLogout();
         };
       }
-      const gearBtn = document.querySelector('main div.flex.items-center.gap-2 button.glass');
+      const gearBtn = document.querySelector('main div.flex.items-center.gap-2 button.glass, main button.glass svg path[d*="9.671"]')?.closest('button');
       if (gearBtn && !gearBtn.dataset.worklyFixed) {
         gearBtn.dataset.worklyFixed = 'true';
+        gearBtn.title = 'Editar Perfil & Configurações';
         gearBtn.onclick = (e) => {
           e.preventDefault();
           e.stopPropagation();
-          window.worklyShowAccountSwitcher();
+          window.worklyShowEditProfileModal();
         };
       }
     }
 
-    // 5.2. TELA DE CARTEIRA (/pay)
+    // 5.3. TELA DE CARTEIRA (/pay)
     if (path.includes('/pay')) {
       const saldoP = document.querySelector('p.relative.mt-2.text-4xl');
       if (saldoP && (saldoP.textContent.includes('12.480,75') || !saldoP.dataset.fixed)) {
@@ -1355,13 +1747,38 @@
           btn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            alert('💳 Workly Card: O cartão digital com garantia Pix está disponível para membros Ouro e Diamante!');
+            window.worklyShowVirtualCardModal();
           };
         }
       });
+
+      const txContainer = document.querySelector('main div.glass.divide-y');
+      if (txContainer && !txContainer.dataset.worklyLoadedReal) {
+        txContainer.dataset.worklyLoadedReal = 'true';
+        fetch(`${API_BASE}/wallet/statement`).then(r => r.json()).then(data => {
+          if (data && data.transactions && data.transactions.length > 0) {
+            txContainer.innerHTML = data.transactions.map(t => `
+              <div class="flex items-center justify-between p-4">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-10 w-10 items-center justify-center rounded-xl ${t.valor > 0 ? 'bg-emerald-400/20 text-emerald-300' : 'bg-rose-400/20 text-rose-300'}">
+                    ${t.valor > 0 ? '↙' : '↗'}
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold">${t.descricao}</p>
+                    <p class="text-[10px] text-muted-foreground">${t.data} · Status: ${t.status}</p>
+                  </div>
+                </div>
+                <p class="text-sm font-bold ${t.valor > 0 ? 'text-emerald-300' : 'text-rose-300'}">
+                  ${t.valor > 0 ? '+' : ''}R$ ${Math.abs(t.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            `).join('');
+          }
+        }).catch(() => {});
+      }
     }
 
-    // 5.3. TELA DE SCORE (/score)
+    // 5.4. TELA DE SCORE (/score)
     if (path.includes('/score')) {
       const scoreNum = document.querySelector('p.text-6xl.font-extrabold');
       if (scoreNum && (scoreNum.textContent.trim() === '872' || !scoreNum.dataset.fixed)) {
@@ -1381,7 +1798,7 @@
       }
     }
 
-    // 5.4. TELA DE VAGAS (/oportunidades)
+    // 5.5. TELA DE VAGAS (/oportunidades)
     if (path.includes('/oportunidades')) {
       const candidatarBtns = Array.from(document.querySelectorAll('button')).filter(b => b.textContent.trim().startsWith('Candidatar'));
       candidatarBtns.forEach(btn => {
@@ -1405,7 +1822,8 @@
             btn.style.background = 'rgba(16,185,129,0.3)';
             btn.style.borderColor = '#10b981';
             setTimeout(() => {
-              if (confirm(`Candidatura enviada para ${company}!\nDeseja abrir a conversa no Chat Interno agora?`)) {
+              if (confirm(`Candidatura enviada para ${company}!
+Deseja abrir a conversa no Chat Interno agora?`)) {
                 window.worklyOpenChat('conv-01');
               }
             }, 300);
@@ -1426,7 +1844,7 @@
       }
     }
 
-    // 5.5. TELA DE PUBLICAR SERVIÇO (/publicar-servico)
+    // 5.6. TELA DE PUBLICAR SERVIÇO (/publicar-servico)
     if (path.includes('/publicar-servico')) {
       const pubBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Publicar agora'));
       if (pubBtn && !pubBtn.dataset.worklyFixed) {
@@ -1455,7 +1873,7 @@
             await fetch(`${API_BASE}/jobs`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ titulo, orcamento: parseFloat(orcamento), descricao, categoria, cidade: 'Goiatuba', estado: 'GO' })
+              body: JSON.stringify({ titulo, orcamento: parseFloat(orcamento), descricao, categoria, cidade: user.cidade || 'Goiatuba', estado: user.estado || 'GO' })
             });
             alert('✅ Serviço publicado com sucesso na plataforma Workly!');
             window.location.href = '/oportunidades';
@@ -1467,7 +1885,7 @@
       }
     }
 
-    // 5.6. TELA DE WORKLY EXPRESS (/express)
+    // 5.7. TELA DE WORKLY EXPRESS (/express)
     if (path.includes('/express')) {
       const allActionBtns = Array.from(document.querySelectorAll('main button'));
       allActionBtns.forEach(btn => {
@@ -1487,18 +1905,55 @@
             e.stopPropagation();
             window.worklyOpenChat('conv-02');
           };
-        } else if (txt.includes('Ligar')) {
+        } else if (txt.includes('Contato') || txt.includes('Ligar')) {
           btn.dataset.worklyFixed = 'true';
           btn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            alert('📞 Ligação Segura Workly: O número é protegido por máscara. Discando: (64) 3495-9000 (Central Goiatuba)...');
+            window.worklyContactJob('job-101');
           };
         }
       });
     }
 
-    // 5.7. TELA DE CHAT (/chat)
+    // 5.8. TELA DE EXPRESS EMPRESAS (/express-empresas)
+    if (path.includes('/express-empresas')) {
+      const planBtns = Array.from(document.querySelectorAll('main button')).filter(b => 
+        b.textContent.includes('Contratar') || 
+        b.textContent.includes('Impulsionar') || 
+        b.textContent.includes('Encontrar') || 
+        b.textContent.includes('Montar') || 
+        b.textContent.includes('Especialista') || 
+        b.textContent.includes('Proposta')
+      );
+      planBtns.forEach(btn => {
+        if (btn.dataset.worklyFixed) return;
+        btn.dataset.worklyFixed = 'true';
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const card = btn.closest('.glass') || btn.parentElement;
+          const planName = card ? card.querySelector('p.font-bold, h3')?.textContent || 'Plano Empresarial' : 'Plano Empresarial';
+          const price = card ? card.querySelector('span.text-2xl, span.text-xl')?.textContent || 'R$ 99,90' : 'R$ 99,90';
+          window.worklyShowB2BContractModal(planName, price);
+        };
+      });
+    }
+
+    // 5.9. TELA DE EMPRESAS (/empresas)
+    if (path.includes('/empresas')) {
+      const filterBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Filtros'));
+      if (filterBtn && !filterBtn.dataset.worklyFixed) {
+        filterBtn.dataset.worklyFixed = 'true';
+        filterBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.worklyShowFilterModal();
+        };
+      }
+    }
+
+    // 5.10. TELA DE CHAT (/chat)
     if (path.includes('/chat')) {
       const convBtns = Array.from(document.querySelectorAll('main button')).filter(b => b.querySelector('div.flex-1'));
       convBtns.forEach((btn, idx) => {
@@ -1513,23 +1968,33 @@
       });
     }
 
-    // 5.8. TELA DE VERIFIED (/verified)
+    // 5.11. TELA DE VERIFIED (/verified)
     if (path.includes('/verified')) {
-      const subscribeBtns = Array.from(document.querySelectorAll('main button')).filter(b => b.textContent.includes('Assinar') || b.textContent.includes('Quero'));
-      subscribeBtns.forEach(btn => {
-        if (btn.dataset.worklyFixed) return;
-        btn.dataset.worklyFixed = 'true';
-        btn.onclick = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          window.worklySubscribeVerifiedModal();
-        };
-      });
+      if (!document.getElementById('verified-subscribe-top-btn')) {
+        const topCard = document.querySelector('main div.space-y-3');
+        if (topCard) {
+          const actionBanner = document.createElement('div');
+          actionBanner.id = 'verified-subscribe-top-btn';
+          actionBanner.style.cssText = 'background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border-radius: 20px; padding: 16px; margin-bottom: 16px; text-align: center; color: #fff; box-shadow: 0 4px 20px rgba(15,111,255,0.4);';
+          actionBanner.innerHTML = `
+            <div style="font-size: 14px; font-weight: 800;">🛡️ Desbloqueie o Selo de Verificação Oficial</div>
+            <div style="font-size: 11px; opacity: 0.9; margin: 4px 0 12px 0;">3x mais propostas no feed e taxa de comissão reduzida para 8%</div>
+            <button onclick="window.worklySubscribeVerifiedModal()" style="background: #fff; color: #0F6FFF; border: none; font-weight: 800; padding: 10px 24px; border-radius: 9999px; font-size: 12px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+              Ativar Selo Verificado (R$ 29,90/mês) →
+            </button>
+          `;
+          topCard.parentNode.insertBefore(actionBanner, topCard);
+        }
+      }
     }
 
-    // 5.9. TELA DE ACADEMY (/academy)
+    // 5.12. TELA DE ACADEMY (/academy)
     if (path.includes('/academy')) {
-      const courseBtns = Array.from(document.querySelectorAll('main button')).filter(b => b.textContent.includes('Iniciar') || b.textContent.includes('Continuar'));
+      const courseBtns = Array.from(document.querySelectorAll('main button')).filter(b => 
+        b.textContent.includes('Começar') || 
+        b.textContent.includes('Iniciar') || 
+        b.textContent.includes('Continuar')
+      );
       courseBtns.forEach(btn => {
         if (btn.dataset.worklyFixed) return;
         btn.dataset.worklyFixed = 'true';
@@ -1538,14 +2003,15 @@
           e.stopPropagation();
           const card = btn.closest('.glass');
           const title = card ? card.querySelector('h3')?.textContent || 'Módulo de Capacitação' : 'Módulo';
-          if (confirm(`Iniciar certificação: "${title}"?\nAo concluir, você ganha +20 pontos no Workly Score!`)) {
+          if (confirm(`Iniciar certificação: "${title}"?
+Ao concluir, você ganha +20 pontos no Workly Score!`)) {
             window.worklySimulateScoreChange(20, `Certificação Academy: ${title}`);
           }
         };
       });
     }
 
-    // 5.10. TELA DE NOTIFICAÇÕES (/notificacoes)
+    // 5.13. TELA DE NOTIFICAÇÕES (/notificacoes)
     if (path.includes('/notificacoes')) {
       const markAllBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('marcar') || b.textContent.includes('Todas'));
       if (markAllBtn && !markAllBtn.dataset.worklyFixed) {
@@ -1557,8 +2023,62 @@
           alert('✅ Todas as notificações foram marcadas como lidas!');
         };
       }
+      const notifItems = Array.from(document.querySelectorAll('main div.space-y-2 button.glass'));
+      notifItems.forEach(item => {
+        if (item.dataset.worklyFixed) return;
+        item.dataset.worklyFixed = 'true';
+        const txt = item.textContent.toLowerCase();
+        item.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (txt.includes('vaga')) {
+            window.location.href = '/oportunidades';
+          } else if (txt.includes('mensagem') || txt.includes('carlos')) {
+            window.worklyOpenChat('conv-01');
+          } else if (txt.includes('pagamento')) {
+            window.location.href = '/pay';
+          } else if (txt.includes('cliente') || txt.includes('marina')) {
+            window.worklyOpenChat('conv-01');
+          } else {
+            window.location.href = '/oportunidades';
+          }
+        };
+      });
+    }
+
+    // 5.14. TELA DE ANÚNCIOS (/anuncios)
+    if (path.includes('/anuncios')) {
+      const adBtns = Array.from(document.querySelectorAll('main button')).filter(b => b.textContent.includes('Contratar com Pix') || b.textContent.includes('Criar campanha'));
+      adBtns.forEach(btn => {
+        if (btn.dataset.worklyFixed) return;
+        btn.dataset.worklyFixed = 'true';
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const card = btn.closest('.glass');
+          const title = card ? card.querySelector('p.font-bold')?.textContent || 'Campanha Express' : 'Campanha Express';
+          const price = card ? card.querySelector('span.text-2xl')?.textContent || 'R$ 29,90' : 'R$ 29,90';
+          window.worklyShowPlanCheckoutModal('job-101', { contratanteNome: title, plano: title, preco: price });
+        };
+      });
+    }
+
+    // 5.15. TELA DE ADMIN (/admin)
+    if (path.includes('/admin')) {
+      const reportBtns = Array.from(document.querySelectorAll('main div.glass.divide-y button'));
+      reportBtns.forEach(btn => {
+        if (btn.dataset.worklyFixed) return;
+        btn.dataset.worklyFixed = 'true';
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const title = btn.textContent.trim().split('·')[0].trim();
+          window.worklyShowAdminReportsModal(title);
+        };
+      });
     }
   }
+
 
   // Intercepta rotas e formulários na página
   function checkRouteInterceptors() {

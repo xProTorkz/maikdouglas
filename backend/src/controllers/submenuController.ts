@@ -226,4 +226,33 @@ export class SubmenuController {
       mensagem: `Código validado! R$ ${valorLiquido.toFixed(2)} liberados na carteira do prestador (+25 pontos no Workly Score).`
     });
   }
+
+  // 8. Relatórios Consolidados para Painel Administrativo
+  public static getAdminReports(req: Request, res: Response) {
+    return res.json({
+      usuarios: { total: 1284502, ativosMes: 894200, prestadores: 780000, contratantes: 504502, crescimento: '+12.4%' },
+      empresas: { total: 38910, vagasAbertas: 2140, vagasConcluidasMes: 15400, crescimento: '+5.1%' },
+      financeiro: { receitaMensal: 12800000.00, volumeEscrowAtivo: 4050.00, payoutsRealizados: 9800000.00, crescimento: '+18.7%' },
+      assinaturas: { ativas: 94220, pro: 68000, business: 21000, elite: 5220 },
+      topPracas: [
+        { cidade: 'Goiatuba, GO (Piloto)', profissionais: 1240, vagas: 85, taxaSucesso: '99.1%' },
+        { cidade: 'Rio Verde, GO', profissionais: 3400, vagas: 210, taxaSucesso: '97.8%' },
+        { cidade: 'Goiânia, GO', profissionais: 15200, vagas: 890, taxaSucesso: '98.5%' },
+        { cidade: 'São Paulo, SP', profissionais: 48000, vagas: 3200, taxaSucesso: '96.9%' }
+      ]
+    });
+  }
+
+  // 9. Contratação B2B & Planos Corporativos
+  public static createB2BInquiry(req: Request, res: Response) {
+    const { plano, empresaNome, email, telefone, funcionarios, mensagem } = req.body;
+    const protocolo = 'B2B-' + Date.now().toString().slice(-6);
+    return res.status(201).json({
+      success: true,
+      protocolo,
+      plano: plano || 'Start Empresarial',
+      empresa: empresaNome || 'Empresa Parceira',
+      mensagem: `Solicitação do plano ${plano || 'Empresarial'} registrada sob protocolo ${protocolo}! Nosso consultor B2B entrará em contato em até 15 minutos.`
+    });
+  }
 }

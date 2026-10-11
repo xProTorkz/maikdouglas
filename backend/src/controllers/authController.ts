@@ -128,4 +128,26 @@ export class AuthController {
     const { senhaHash, ...userClean } = user;
     return res.json({ user: userClean });
   }
+
+  public static async updateProfile(req: Request, res: Response) {
+    const userId = (req as any).user?.id || req.body.userId || "user-001-prof";
+    const { nome, profissao, telefone, cidade, estado, chavePix, bio, avatar } = req.body;
+
+    let user = mockUsers.find(u => u.id === userId);
+    if (!user) {
+      user = mockUsers[0];
+    }
+
+    if (nome) user.nome = nome;
+    if (profissao) user.profissao = profissao;
+    if (telefone) user.telefone = telefone;
+    if (cidade) user.cidade = cidade;
+    if (estado) user.estado = estado;
+    if (chavePix) user.chavePix = chavePix;
+    if (bio) user.bio = bio;
+    if (avatar) user.avatar = avatar;
+
+    const { senhaHash, ...userClean } = user;
+    return res.json({ success: true, message: "Perfil atualizado com sucesso!", user: userClean });
+  }
 }

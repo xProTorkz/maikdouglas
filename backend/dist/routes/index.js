@@ -17,6 +17,8 @@ router.get('/health', (req, res) => {
 router.post('/auth/register', authController_1.AuthController.register);
 router.post('/auth/login', authController_1.AuthController.login);
 router.get('/auth/me', auth_1.authMiddleware, authController_1.AuthController.me);
+router.post('/auth/profile', auth_1.optionalAuthMiddleware, authController_1.AuthController.updateProfile);
+router.put('/auth/profile', auth_1.optionalAuthMiddleware, authController_1.AuthController.updateProfile);
 // 2. ROTAS DE VAGAS & EXPRESS
 router.get('/jobs', jobController_1.JobController.listJobs);
 router.post('/jobs', auth_1.optionalAuthMiddleware, jobController_1.JobController.createJob);
@@ -52,4 +54,7 @@ router.post('/plans/subscribe', planController_1.PlanController.subscribe);
 router.get('/plans/check-payment/:transacaoId', planController_1.PlanController.checkPayment);
 router.get('/plans/status/:userId', planController_1.PlanController.getPlanStatus);
 router.post('/plans/activate-manual', planController_1.PlanController.activateManual);
+// 9. ROTAS DE ADMINISTRAÇÃO & B2B CORPORATIVO
+router.get('/admin/reports', submenuController_1.SubmenuController.getAdminReports);
+router.post('/b2b/inquiry', submenuController_1.SubmenuController.createB2BInquiry);
 exports.default = router;

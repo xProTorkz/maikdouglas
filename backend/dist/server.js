@@ -64,6 +64,9 @@ const appDir = path_1.default.resolve(__dirname, '../../app');
 app.use(express_1.default.static(appDir));
 // Fallback SPA para TanStack Router (rotas como /login, /jobs, /home, etc.)
 app.get('*', (req, res) => {
+    if (req.path.includes('.') && !req.path.endsWith('.html')) {
+        return res.status(404).send('Not Found');
+    }
     res.sendFile(path_1.default.join(appDir, 'index.html'));
 });
 server.listen(PORT, () => {

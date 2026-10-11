@@ -249,6 +249,84 @@
     document.body.appendChild(overlay);
   };
 
+  // 3. FLUXO REAL DE CONTRATAÇÃO DE PROFISSIONAL (ESCROW / CUSTÓDIA PIX PUSHIN PAY)
+  window.worklyContratarProfissional = function (nome, cargo, valorFormatado) {
+    const existing = document.getElementById('workly-hire-modal');
+    if (existing) existing.remove();
+
+    let numValor = 180;
+    if (valorFormatado) {
+      const match = String(valorFormatado).replace(/\./g, '').replace(',', '.').match(/\d+(\.\d+)?/);
+      if (match) numValor = parseFloat(match[0]);
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'workly-sub-modal';
+    overlay.id = 'workly-hire-modal';
+    overlay.innerHTML = `
+      <div class="workly-sub-card" style="max-width: 520px; text-align: center;">
+        <div style="font-size: 32px; margin-bottom: 8px;">🤝</div>
+        <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #fff;">Contratar ${nome}</h3>
+        <p style="font-size: 13px; color: #94a3b8; margin: 4px 0 16px;">Especialidade: <strong style="color: #60a5fa;">${cargo || 'Profissional Verificado'}</strong></p>
+
+        <div style="background: rgba(15,111,255,0.08); border: 1px solid rgba(15,111,255,0.25); border-radius: 18px; padding: 18px; margin-bottom: 16px; text-align: left;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-size: 13px; color: #cbd5e1;">Valor do Serviço:</span>
+            <span style="font-size: 20px; font-weight: 800; color: #34d399;">R$ ${numValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px;">
+            🔒 <strong>Garantia Workly Escrow:</strong> O valor é retido em custódia segura via Pix do Banco Central. O prestador só recebe após você validar e liberar o serviço com seu código de 6 dígitos.
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button onclick="window.worklyShowPixEscrowModal('${nome}', ${numValor}); document.getElementById('workly-hire-modal').remove();" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #0F6FFF, #8A3FFC); border: none; border-radius: 16px; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(15,111,255,0.4);">
+            ⚡ Depositar em Custódia via Pix (Pushin Pay)
+          </button>
+          
+          <button onclick="window.worklyOpenChat('conv-01'); document.getElementById('workly-hire-modal').remove();" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; color: #fff; font-weight: 600; font-size: 13px; cursor: pointer;">
+            💬 Conversar Primeiro no Chat Interno
+          </button>
+
+          <button onclick="document.getElementById('workly-hire-modal').remove()" style="background: none; border: none; color: #94a3b8; font-size: 12px; cursor: pointer; padding: 6px;">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  };
+
+  // 4. PUBLICAÇÃO REAL EXPRESS
+  window.worklyPublicarExpress = async function (dados) {
+    const user = getCurrentUser();
+    try {
+      const res = await fetch(`${API_BASE}/jobs/express`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titulo: dados?.titulo || 'Serviço Urgente Express',
+          categoria: dados?.categoria || 'Geral',
+          orcamento: parseFloat(dados?.orcamento) || 200,
+          descricao: dados?.descricao || 'Preciso para hoje com urgência',
+          cidade: dados?.cidade || 'São Paulo',
+          estado: dados?.estado || 'SP',
+          telefone: dados?.telefone || user.telefone || '11999887766',
+          contratanteId: user.id,
+          contratanteNome: user.nome
+        })
+      });
+      if (res.ok) {
+        alert('⚡ Pedido Express publicado com sucesso! Profissionais próximos foram alertados.');
+        window.location.href = '/oportunidades';
+      } else {
+        alert('Erro ao publicar pedido Express.');
+      }
+    } catch (e) {
+      alert('Falha de conexão: ' + e.message);
+    }
+  };
+
   // INICIA CONVERSA REAL NO CHAT INTERNO (SEM FALSIDADE)
   window.worklyStartRealChat = async function (contratanteId, contratanteNome, jobId) {
     const user = getCurrentUser();

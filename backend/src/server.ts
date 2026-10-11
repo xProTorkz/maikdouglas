@@ -70,6 +70,9 @@ app.use(express.static(appDir));
 
 // Fallback SPA para TanStack Router (rotas como /login, /jobs, /home, etc.)
 app.get('*', (req, res) => {
+  if (req.path.includes('.') && !req.path.endsWith('.html')) {
+    return res.status(404).send('Not Found');
+  }
   res.sendFile(path.join(appDir, 'index.html'));
 });
 
